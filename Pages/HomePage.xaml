@@ -1,0 +1,38 @@
+<Page
+    x:Class="Caffeine.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+
+    <ScrollViewer>
+        <StackPanel Padding="36,24,36,36" Spacing="4" MaxWidth="800" HorizontalAlignment="Stretch">
+
+            <TextBlock
+                Text="Caffeine"
+                Style="{StaticResource TitleTextBlockStyle}"
+                Margin="0,0,0,4" />
+            <TextBlock
+                Text="Keeps your PC and display awake, so your machine won't lock the screen or go to sleep while you're away from the keyboard."
+                Style="{StaticResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap"
+                Margin="0,0,0,20" />
+
+            <toolkit:SettingsCard
+                Header="Keep screen awake"
+                Description="Prevents the display from turning off, locking, or starting the screensaver">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE706;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch
+                    x:Name="AwakeToggle"
+                    OnContent="On"
+                    OffContent="Off"
+                    Toggled="AwakeToggle_Toggled" />
+            </toolkit:SettingsCard>
+
+            <!-- Reserved for the animated character (future feature). -->
+            <Grid x:Name="CharacterArea" MinHeight="0" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>
