@@ -48,6 +48,19 @@
                     OffContent="Off"
                     Toggled="RunInTrayToggle_Toggled" />
             </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Start with Windows"
+                Description="Launch Caffeine automatically when you sign in — it starts quietly in the tray">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE770;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch
+                    x:Name="StartWithWindowsToggle"
+                    OnContent="On"
+                    OffContent="Off"
+                    Toggled="StartWithWindowsToggle_Toggled" />
+            </toolkit:SettingsCard>
         </StackPanel>
     </ScrollViewer>
 </Page>

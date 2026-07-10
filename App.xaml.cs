@@ -49,6 +49,7 @@ public partial class App : Application
         _iconOffPath = Path.Combine(AppContext.BaseDirectory, "Assets", "caffeine-off.ico");
 
         Settings = SettingsService.Load();
+        StartupService.RefreshPath();
 
         _window = new MainWindow();
         if (Settings.RunInSystemTray)
@@ -59,7 +60,13 @@ public partial class App : Application
         State.Changed += OnStateChanged;
         State.Set(Settings.RememberState ? Settings.LastAwakeActive : true);
 
-        _window.Activate();
+        // When Windows launches us at sign-in, start quietly in the tray
+        // instead of popping the window — unless there is no tray to live in.
+        bool startupLaunch = Environment.GetCommandLineArgs().Contains("--startup");
+        if (!startupLaunch || !Settings.RunInSystemTray)
+        {
+            _window.Activate();
+        }
     }
 
     public void SetRememberState(bool remember)

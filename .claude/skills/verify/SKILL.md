@@ -33,7 +33,7 @@ UI Automation patterns work without focus and don't steal the pointer:
 - Window: root child with `Name = "Caffeine"`.
 - Nav items ("Home", "Settings", "Welcome to Caffeine"): `SelectionItemPattern.Select()`.
 - Toggles by AutomationId (`AwakeToggle`, `RememberStateToggle`,
-  `RunInTrayToggle`): `TogglePattern.Toggle()`. Find by **AutomationId**, not
+  `RunInTrayToggle`, `StartWithWindowsToggle`): `TogglePattern.Toggle()`. Find by **AutomationId**, not
   Name — the SettingsCard shares the toggle's Name and matches first.
 - UIA only sees the currently loaded page; navigate before searching.
 - Close window: `PostMessage(hwnd, 0x0010, 0, 0)` (WM_CLOSE).
@@ -47,3 +47,9 @@ UI Automation patterns work without focus and don't steal the pointer:
   `false`: WM_CLOSE exits the process.
 - Awake state itself: `powercfg /requests` shows a DISPLAY request from
   Caffeine.exe, but needs an elevated shell — usually skip and trust the toggle.
+- Start with Windows: registry value `Caffeine` under
+  `HKCU:\Software\Microsoft\Windows\CurrentVersion\Run` (command ends in
+  `--startup`); the toggle reads the registry directly, nothing in
+  settings.json. Launch with `-ArgumentList "--startup"` → window stays hidden
+  (MainWindowHandle 0) when run-in-tray is on. Leave the value **removed**
+  after testing unless the user wants it on.

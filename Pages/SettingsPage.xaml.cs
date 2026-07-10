@@ -16,6 +16,7 @@ public sealed partial class SettingsPage : Page
         _initializing = true;
         RememberStateToggle.IsOn = _app.Settings.RememberState;
         RunInTrayToggle.IsOn = _app.Settings.RunInSystemTray;
+        StartWithWindowsToggle.IsOn = StartupService.IsEnabled();
         _initializing = false;
     }
 
@@ -32,6 +33,14 @@ public sealed partial class SettingsPage : Page
         if (!_initializing)
         {
             _app.SetRunInSystemTray(RunInTrayToggle.IsOn);
+        }
+    }
+
+    private void StartWithWindowsToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_initializing)
+        {
+            StartupService.SetEnabled(StartWithWindowsToggle.IsOn);
         }
     }
 }
