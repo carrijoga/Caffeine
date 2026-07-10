@@ -1,0 +1,69 @@
+<Page
+    x:Class="Caffeine.Pages.WelcomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+
+    <ScrollViewer>
+        <StackPanel Padding="36,24,36,36" Spacing="4" MaxWidth="800" HorizontalAlignment="Stretch">
+
+            <TextBlock
+                Text="Welcome to Caffeine"
+                Style="{StaticResource TitleTextBlockStyle}"
+                Margin="0,0,0,4" />
+            <TextBlock
+                Text="Caffeine keeps your PC and display awake so your machine won't lock the screen or go to sleep while you're away from the keyboard — during a download, a long read, or a presentation."
+                Style="{StaticResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap"
+                Margin="0,0,0,20" />
+
+            <TextBlock
+                Text="Getting started"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Margin="1,0,0,8" />
+
+            <toolkit:SettingsCard
+                Header="1. Turn it on"
+                Description="Go to Home and flip the 'Keep screen awake' toggle. That's it — your screen stays on until you turn it off.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE706;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="2. Use the tray icon"
+                Description="Closing the window keeps Caffeine running in the system tray. Left-click the cup to toggle; right-click for options. The full cup means it's active.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8A5;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="3. Make it yours"
+                Description="In Settings you can have Caffeine remember the toggle between restarts, or exit instead of hiding to the tray when you close the window.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE713;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsExpander
+                Header="How it works"
+                Description="No simulated keypresses, no timers — zero power overhead"
+                Margin="0,16,0,0">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE946;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <toolkit:SettingsExpander.Items>
+                    <toolkit:SettingsCard ContentAlignment="Left">
+                        <TextBlock
+                            Text="Caffeine asks the Windows power manager to keep the display and system awake using the same API video players use (SetThreadExecutionState). It's a single call when you toggle — the app sits completely idle in between, and Windows automatically clears the request if Caffeine exits."
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap" />
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

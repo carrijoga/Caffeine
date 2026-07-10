@@ -16,6 +16,8 @@ public partial class App : Application
 
     public AwakeState State { get; } = new();
 
+    public AppSettings Settings { get; private set; } = new();
+
     public App()
     {
         InitializeComponent();
@@ -46,17 +48,52 @@ public partial class App : Application
         _iconOnPath = Path.Combine(AppContext.BaseDirectory, "Assets", "caffeine-on.ico");
         _iconOffPath = Path.Combine(AppContext.BaseDirectory, "Assets", "caffeine-off.ico");
 
-        _window = new MainWindow(State);
-        CreateTrayIcon();
+        Settings = SettingsService.Load();
+
+        _window = new MainWindow();
+        if (Settings.RunInSystemTray)
+        {
+            CreateTrayIcon();
+        }
 
         State.Changed += OnStateChanged;
-        State.Set(true); // start active, like the original Caffeine
+        State.Set(Settings.RememberState ? Settings.LastAwakeActive : true);
 
         _window.Activate();
     }
 
+    public void SetRememberState(bool remember)
+    {
+        Settings.RememberState = remember;
+        Settings.LastAwakeActive = State.IsActive;
+        SettingsService.Save(Settings);
+    }
+
+    public void SetRunInSystemTray(bool runInTray)
+    {
+        Settings.RunInSystemTray = runInTray;
+        SettingsService.Save(Settings);
+
+        if (runInTray)
+        {
+            CreateTrayIcon();
+            OnStateChanged(State.IsActive);
+        }
+        else
+        {
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            _trayToggleItem = null;
+        }
+    }
+
     private void CreateTrayIcon()
     {
+        if (_trayIcon is not null)
+        {
+            return;
+        }
+
         _trayToggleItem = new ToggleMenuFlyoutItem { Text = "Keep screen awake" };
         _trayToggleItem.Click += (_, _) => State.Toggle();
 
@@ -95,10 +132,19 @@ public partial class App : Application
         {
             _trayToggleItem.IsChecked = active;
         }
+
+        if (Settings.RememberState && Settings.LastAwakeActive != active)
+        {
+            Settings.LastAwakeActive = active;
+            SettingsService.Save(Settings);
+        }
     }
 
-    private void ExitApp()
+    public void ExitApp()
     {
+        // Release the awake request without clobbering the remembered toggle
+        // position — LastAwakeActive must reflect the user's last choice.
+        State.Changed -= OnStateChanged;
         State.Set(false);
         _trayIcon?.Dispose();
         _window?.AllowClose();
