@@ -60,6 +60,8 @@ public partial class App : Application
             CreateTrayIcon();
         }
 
+        State.KeepScreenOn = Settings.KeepScreenOn;
+        State.Interval = ComputeInterval(Settings);
         State.Changed += OnStateChanged;
         State.Set(Settings.RememberState ? Settings.LastAwakeActive : true);
 
@@ -77,6 +79,38 @@ public partial class App : Application
         Settings.RememberState = remember;
         Settings.LastAwakeActive = State.IsActive;
         SettingsService.Save(Settings);
+    }
+
+    public void SetKeepScreenOn(bool keepScreenOn)
+    {
+        Settings.KeepScreenOn = keepScreenOn;
+        SettingsService.Save(Settings);
+
+        State.KeepScreenOn = keepScreenOn;
+        State.Reapply();
+    }
+
+    public void SetAwakeMode(bool timedMode, int hours, int minutes)
+    {
+        Settings.TimedMode = timedMode;
+        Settings.IntervalHours = hours;
+        Settings.IntervalMinutes = minutes;
+        SettingsService.Save(Settings);
+
+        State.Interval = ComputeInterval(Settings);
+        State.Reapply();
+    }
+
+    /// <summary>Timed-mode duration, clamped to at least one minute; null when indefinite.</summary>
+    private static TimeSpan? ComputeInterval(AppSettings settings)
+    {
+        if (!settings.TimedMode)
+        {
+            return null;
+        }
+
+        var interval = new TimeSpan(settings.IntervalHours, settings.IntervalMinutes, 0);
+        return interval < TimeSpan.FromMinutes(1) ? TimeSpan.FromMinutes(1) : interval;
     }
 
     public void SetRunInSystemTray(bool runInTray)
@@ -104,7 +138,7 @@ public partial class App : Application
             return;
         }
 
-        _trayToggleItem = new ToggleMenuFlyoutItem { Text = "Keep screen awake" };
+        _trayToggleItem = new ToggleMenuFlyoutItem { Text = "Keep awake" };
         _trayToggleItem.Click += (_, _) => State.Toggle();
 
         var openItem = new MenuFlyoutItem { Text = "Open Caffeine" };
@@ -119,7 +153,7 @@ public partial class App : Application
             Icon = new Icon(_iconOffPath),
             NoLeftClickDelay = true,
             LeftClickCommand = new RelayCommand(State.Toggle),
-            ContextMenuMode = ContextMenuMode.SecondWindow,
+            ContextMenuMode = ContextMenuMode.PopupMenu,
             ContextFlyout = new MenuFlyout
             {
                 Items = { _trayToggleItem, new MenuFlyoutSeparator(), openItem, exitItem },
@@ -134,7 +168,7 @@ public partial class App : Application
         {
             _trayIcon.Icon = new Icon(active ? _iconOnPath : _iconOffPath);
             _trayIcon.ToolTipText = active
-                ? "Caffeine — keeping your screen awake"
+                ? "Caffeine — keeping your PC awake"
                 : "Caffeine — inactive";
         }
 

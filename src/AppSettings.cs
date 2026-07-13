@@ -13,4 +13,14 @@ public sealed class AppSettings
 
     /// <summary>Last known toggle position, used when <see cref="RememberState"/> is on.</summary>
     public bool LastAwakeActive { get; set; } = true;
+
+    /// <summary>Also keep the display on while awake; off lets the screen sleep normally.</summary>
+    public bool KeepScreenOn { get; set; } = true;
+
+    /// <summary>Turn Awake off automatically after <see cref="IntervalHours"/>:<see cref="IntervalMinutes"/>.</summary>
+    public bool TimedMode { get; set; }
+
+    public int IntervalHours { get; set; } = 1;
+
+    public int IntervalMinutes { get; set; }
 }

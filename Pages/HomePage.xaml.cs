@@ -37,14 +37,45 @@ public sealed partial class HomePage : Page
 
         BadgeActive.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
         BadgeInactive.Visibility = active ? Visibility.Collapsed : Visibility.Visible;
-        StatusTitle.Text = active
-            ? "Keeping your screen awake"
-            : "Your screen can sleep";
-        StatusCaption.Text = active
-            ? "Your display won't turn off, lock, or start the screensaver"
-            : "Normal power and lock settings apply";
+        UpdateStatusText();
 
         RefreshStats();
+    }
+
+    private void UpdateStatusText()
+    {
+        if (!_state.IsActive)
+        {
+            StatusTitle.Text = "Your PC can sleep";
+            StatusCaption.Text = "Normal power and lock settings apply";
+            return;
+        }
+
+        StatusTitle.Text = _state.KeepScreenOn
+            ? "Keeping your PC and screen awake"
+            : "Keeping your PC awake";
+
+        string baseCaption = _state.KeepScreenOn
+            ? "Your display won't turn off, lock, or start the screensaver"
+            : "Your PC won't sleep, but the display can turn off";
+
+        if (_state.SessionEndsAt is { } endsAt)
+        {
+            var remaining = endsAt - DateTimeOffset.Now;
+            if (remaining < TimeSpan.Zero)
+            {
+                remaining = TimeSpan.Zero;
+            }
+
+            string left = remaining.TotalHours >= 1
+                ? $"{(int)remaining.TotalHours} h {remaining.Minutes} min"
+                : remaining.TotalMinutes >= 1
+                    ? $"{remaining.Minutes} min {remaining.Seconds} s"
+                    : $"{remaining.Seconds} s";
+            baseCaption = $"Turns off in {left} — {char.ToLower(baseCaption[0])}{baseCaption[1..]}";
+        }
+
+        StatusCaption.Text = baseCaption;
     }
 
     private void AwakeToggle_Toggled(object sender, RoutedEventArgs e)
@@ -57,6 +88,8 @@ public sealed partial class HomePage : Page
 
     private void RefreshStats()
     {
+        UpdateStatusText();
+
         var (years, months, days, hours, minutes) = Breakdown(_usage.TotalAwake);
         YearsText.Text = years.ToString();
         MonthsText.Text = months.ToString();
@@ -69,7 +102,7 @@ public sealed partial class HomePage : Page
             var session = _usage.CurrentSession;
             SessionText.Text =
                 $"{(int)session.TotalHours:00}:{session.Minutes:00}:{session.Seconds:00}";
-            SessionCaption.Text = "Screen awake right now";
+            SessionCaption.Text = "Awake right now";
         }
         else
         {

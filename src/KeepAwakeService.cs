@@ -23,11 +23,17 @@ internal static class KeepAwakeService
 
     public static bool IsEnabled { get; private set; }
 
+    /// <param name="keepScreenOn">Also hold the display on; otherwise only the system stays awake.</param>
     /// <returns>false if the power request was rejected (practically never happens).</returns>
-    public static bool Enable()
+    public static bool Enable(bool keepScreenOn)
     {
-        var result = SetThreadExecutionState(
-            ExecutionState.Continuous | ExecutionState.DisplayRequired | ExecutionState.SystemRequired);
+        var flags = ExecutionState.Continuous | ExecutionState.SystemRequired;
+        if (keepScreenOn)
+        {
+            flags |= ExecutionState.DisplayRequired;
+        }
+
+        var result = SetThreadExecutionState(flags);
         IsEnabled = result != 0;
         return IsEnabled;
     }

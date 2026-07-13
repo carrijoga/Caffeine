@@ -24,6 +24,64 @@
                 Margin="1,0,0,8" />
 
             <toolkit:SettingsCard
+                Header="Mode"
+                Description="Manage the state of your device when Awake is active">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE945;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ComboBox
+                    x:Name="ModeCombo"
+                    MinWidth="220"
+                    SelectionChanged="ModeCombo_SelectionChanged">
+                    <ComboBoxItem Content="Keep awake indefinitely" />
+                    <ComboBoxItem Content="Keep awake for a time interval" />
+                </ComboBox>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                x:Name="IntervalCard"
+                Header="Time interval"
+                Description="Awake turns off automatically after this long"
+                Visibility="Collapsed">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE917;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumberBox
+                        x:Name="HoursBox"
+                        Header="Hours"
+                        Minimum="0"
+                        Maximum="99"
+                        SpinButtonPlacementMode="Compact"
+                        SmallChange="1"
+                        MinWidth="110"
+                        ValueChanged="Interval_ValueChanged" />
+                    <NumberBox
+                        x:Name="MinutesBox"
+                        Header="Minutes"
+                        Minimum="0"
+                        Maximum="59"
+                        SpinButtonPlacementMode="Compact"
+                        SmallChange="5"
+                        MinWidth="110"
+                        ValueChanged="Interval_ValueChanged" />
+                </StackPanel>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Keep screen on"
+                Description="Turn off to let the display sleep while the PC stays awake">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE7F4;" />
+                </toolkit:SettingsCard.HeaderIcon>
+                <ToggleSwitch
+                    x:Name="KeepScreenOnToggle"
+                    OnContent="On"
+                    OffContent="Off"
+                    Toggled="KeepScreenOnToggle_Toggled" />
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
                 Header="Remember state"
                 Description="Keep the toggle position after closing — Caffeine starts the way you left it">
                 <toolkit:SettingsCard.HeaderIcon>
