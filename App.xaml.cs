@@ -18,6 +18,8 @@ public partial class App : Application
 
     public AppSettings Settings { get; private set; } = new();
 
+    public UsageTracker Usage { get; private set; } = null!;
+
     public App()
     {
         InitializeComponent();
@@ -50,6 +52,7 @@ public partial class App : Application
 
         Settings = SettingsService.Load();
         StartupService.RefreshPath();
+        Usage = new UsageTracker(State); // must subscribe before the initial State.Set below
 
         _window = new MainWindow();
         if (Settings.RunInSystemTray)
