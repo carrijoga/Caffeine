@@ -25,6 +25,11 @@ mechanism video players use. That means:
 - **Right-click** for a menu: toggle, open the status window, or exit.
 - Closing the window just hides it to the tray — exit via the tray menu.
 
+The window opens on a **Home** dashboard with cards for each module:
+
+- **Awake** — the keep-awake toggle described above.
+- **Timers** — Pomodoro (configurable focus/break lengths with toast notifications), countdown with quick presets, and a stopwatch with laps.
+
 ## Building
 
 Requires the .NET 10 SDK on Windows 10 1809+.
