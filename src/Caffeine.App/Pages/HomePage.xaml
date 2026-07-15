@@ -14,6 +14,16 @@
         <Style x:Key="HubCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
             <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         </Style>
+        <!-- Makes the whole module card clickable while keeping the card's visual chrome. -->
+        <Style x:Key="HubCardButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+            <Setter Property="Padding" Value="20,18" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
     </Page.Resources>
 
     <ScrollViewer>
@@ -30,13 +40,15 @@
                 TextWrapping="Wrap"
                 Margin="0,0,0,20" />
 
-            <!-- Awake module card -->
-            <Border Style="{StaticResource HubCardStyle}" Padding="20,18">
+            <!-- Awake module card: whole card navigates to the Awake page. -->
+            <Button
+                Style="{StaticResource HubCardButtonStyle}"
+                Click="OpenAwake_Click"
+                AutomationProperties.Name="Open Awake">
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
@@ -74,18 +86,10 @@
                         MinWidth="0"
                         Margin="0,-2,0,-2"
                         VerticalAlignment="Center"
+                        Tapped="AwakeToggle_Tapped"
                         Toggled="AwakeToggle_Toggled" />
-
-                    <Button
-                        Grid.Column="3"
-                        x:Name="OpenAwakeButton"
-                        VerticalAlignment="Center"
-                        Click="OpenAwake_Click"
-                        AutomationProperties.Name="Open Awake">
-                        <FontIcon Glyph="&#xE76C;" FontSize="12" />
-                    </Button>
                 </Grid>
-            </Border>
+            </Button>
 
             <!-- Habits, Todos and Timers cards land here in later stages. -->
         </StackPanel>

@@ -1,6 +1,7 @@
 using Caffeine.Core.Awake;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace Caffeine.Pages;
 
@@ -40,6 +41,9 @@ public sealed partial class HomePage : Page
             _state.Set(AwakeToggle.IsOn);
         }
     }
+
+    private void AwakeToggle_Tapped(object sender, TappedRoutedEventArgs e) =>
+        e.Handled = true;
 
     private void OpenAwake_Click(object sender, RoutedEventArgs e) =>
         ((App)Application.Current).NavigateTo("awake");
