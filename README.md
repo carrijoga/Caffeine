@@ -28,6 +28,7 @@ mechanism video players use. That means:
 The window opens on a **Home** dashboard with cards for each module:
 
 - **Awake** — the keep-awake toggle described above.
+- **Todos** — a single to-do list with due dates and Active/Completed views.
 - **Timers** — Pomodoro (configurable focus/break lengths with toast notifications), countdown with quick presets, and a stopwatch with laps.
 
 ## Building
