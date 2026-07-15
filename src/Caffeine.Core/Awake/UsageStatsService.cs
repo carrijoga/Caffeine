@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Loads and saves <see cref="UsageStats"/> to %LocalAppData%\Caffeine\usage.json,

@@ -1,4 +1,4 @@
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Lifetime usage statistics, persisted as JSON by <see cref="UsageStatsService"/>.

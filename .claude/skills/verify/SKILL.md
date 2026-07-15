@@ -10,8 +10,8 @@ WinUI 3 desktop tray app, unpackaged, self-contained.
 ## Build & launch
 
 ```powershell
-dotnet build Caffeine.csproj -p:Platform=x64 -v:m   # ~25s
-Start-Process "bin\x64\Debug\net10.0-windows10.0.19041.0\Caffeine.exe"
+dotnet build src/Caffeine.App/Caffeine.App.csproj -p:Platform=x64 -v:m   # ~25s
+Start-Process "src\Caffeine.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Caffeine.exe"
 ```
 
 Kill any already-running instance first (`Stop-Process -Name Caffeine`) or the

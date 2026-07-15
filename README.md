@@ -30,14 +30,18 @@ mechanism video players use. That means:
 Requires the .NET 10 SDK on Windows 10 1809+.
 
 ```powershell
-dotnet build -p:Platform=x64 -p:RuntimeIdentifier=win-x64
-# run: bin\x64\Debug\net10.0-windows10.0.19041.0\win-x64\Caffeine.exe
+dotnet build src/Caffeine.App/Caffeine.App.csproj -p:Platform=x64 -p:RuntimeIdentifier=win-x64
+# run: src\Caffeine.App\bin\x64\Debug\net10.0-windows10.0.19041.0\win-x64\Caffeine.exe
 ```
 
 For an optimized standalone build (no .NET install needed on the target machine):
 
 ```powershell
-dotnet publish -c Release -p:Platform=x64 -r win-x64 --self-contained
+dotnet publish src/Caffeine.App/Caffeine.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained
+```
+
+```powershell
+dotnet test tests/Caffeine.Core.Tests/Caffeine.Core.Tests.csproj
 ```
 
 > Note: the exe is locked while the app is running — exit it from the tray
@@ -45,8 +49,7 @@ dotnet publish -c Release -p:Platform=x64 -r win-x64 --self-contained
 
 ## Project layout
 
-- [src/KeepAwakeService.cs](src/KeepAwakeService.cs) — the `SetThreadExecutionState` P/Invoke wrapper
-- [src/AwakeState.cs](src/AwakeState.cs) — single source of truth for on/off state
-- [App.xaml.cs](App.xaml.cs) — app startup and tray icon (via H.NotifyIcon.WinUI)
-- [MainWindow.xaml](MainWindow.xaml) — the small status/toggle window
-- [docs/superpowers/specs](docs/superpowers/specs) — design doc
+- [src/Caffeine.Core](src/Caffeine.Core) — all app logic, UI-free (keep-awake, settings, usage stats)
+- [src/Caffeine.App](src/Caffeine.App) — the WinUI 3 shell: windows, pages, tray icon
+- [tests/Caffeine.Core.Tests](tests/Caffeine.Core.Tests) — xUnit tests for Core
+- [docs/superpowers/specs](docs/superpowers/specs) — design docs

@@ -1,6 +1,6 @@
 using Caffeine.Core.Common;
 
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Single source of truth for whether keep-awake is active. The tray icon,

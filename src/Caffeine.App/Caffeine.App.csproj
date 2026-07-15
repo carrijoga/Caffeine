@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Caffeine.Core\Caffeine.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Assets\**\*.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace Caffeine;
+namespace Caffeine.Core.Settings;
 
 /// <summary>
 /// Manages the per-user "start with Windows" Run entry. The registry value is

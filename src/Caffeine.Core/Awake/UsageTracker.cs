@@ -1,6 +1,6 @@
 using Caffeine.Core.Common;
 
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Accumulates how long keep-awake has been active and maintains the daily

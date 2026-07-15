@@ -1,4 +1,6 @@
 using System.Drawing;
+using Caffeine.Core.Awake;
+using Caffeine.Core.Settings;
 using H.NotifyIcon;
 using H.NotifyIcon.Core;
 using Microsoft.UI.Xaml;

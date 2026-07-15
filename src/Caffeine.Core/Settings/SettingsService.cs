@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Caffeine;
+namespace Caffeine.Core.Settings;
 
 /// <summary>
 /// Loads and saves <see cref="AppSettings"/> to %LocalAppData%\Caffeine\settings.json.
