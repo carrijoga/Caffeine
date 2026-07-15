@@ -63,6 +63,8 @@ public sealed class TimersService
 
     public void SkipPomodoro()
     {
+        Countdown.Pause();
+        Stopwatch.Pause();
         Pomodoro.Skip();
         RefreshTick();
     }
