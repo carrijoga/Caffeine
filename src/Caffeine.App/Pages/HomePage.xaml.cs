@@ -1,4 +1,5 @@
 using Caffeine.Core.Awake;
+using Caffeine.Core.Todos;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -9,6 +10,7 @@ public sealed partial class HomePage : Page
 {
     private readonly AwakeState _state;
     private readonly TimersService _timers;
+    private readonly TodoService _todos;
     private bool _updatingToggle;
 
     public HomePage()
@@ -16,6 +18,7 @@ public sealed partial class HomePage : Page
         var app = (App)Application.Current;
         _state = app.State;
         _timers = app.Timers;
+        _todos = app.Todos;
         InitializeComponent();
 
         _state.Changed += OnStateChanged;
@@ -28,6 +31,7 @@ public sealed partial class HomePage : Page
 
         OnStateChanged(_state.IsActive);
         RefreshTimersCard();
+        RefreshTodosCard();
     }
 
     private void OnStateChanged(bool active)
@@ -81,4 +85,26 @@ public sealed partial class HomePage : Page
 
     private void OpenTimers_Click(object sender, RoutedEventArgs e) =>
         ((App)Application.Current).NavigateTo("timers");
+
+    private void RefreshTodosCard()
+    {
+        IReadOnlyList<TodoItem> active = _todos.Active;
+        int overdue = active.Count(_todos.IsOverdue);
+        int dueToday = active.Count(_todos.IsDueToday);
+
+        TodosCaption.Text = (dueToday, overdue) switch
+        {
+            (0, 0) when active.Count == 0 => "All caught up",
+            (0, 0) => Plural(active.Count, "open to-do"),
+            (_, 0) => $"{Plural(dueToday, "to-do")} due today",
+            (0, _) => $"{Plural(overdue, "to-do")} overdue",
+            _ => $"{dueToday} due today · {overdue} overdue",
+        };
+    }
+
+    private static string Plural(int count, string noun) =>
+        count == 1 ? $"1 {noun}" : $"{count} {noun}s";
+
+    private void OpenTodos_Click(object sender, RoutedEventArgs e) =>
+        ((App)Application.Current).NavigateTo("todos");
 }

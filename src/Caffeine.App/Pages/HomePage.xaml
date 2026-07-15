@@ -40,6 +40,40 @@
                 TextWrapping="Wrap"
                 Margin="0,0,0,20" />
 
+            <!-- Todos module card: whole card navigates to the Todos page. -->
+            <Button
+                Style="{StaticResource HubCardButtonStyle}"
+                Click="OpenTodos_Click"
+                AutomationProperties.Name="Open Todos"
+                Margin="0,0,0,4">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Width="48" Height="48" VerticalAlignment="Center">
+                        <Border
+                            CornerRadius="24"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                        <TextBlock
+                            Text="&#x2705;"
+                            FontSize="22"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Todos" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            x:Name="TodosCaption"
+                            Text="All caught up"
+                            Style="{StaticResource HubCaptionStyle}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
             <!-- Timers module card: whole card navigates to the Timers page. -->
             <Button
                 Style="{StaticResource HubCardButtonStyle}"
