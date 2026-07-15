@@ -1,6 +1,8 @@
 using System.Drawing;
 using Caffeine.Core.Awake;
+using Caffeine.Core.Common;
 using Caffeine.Core.Settings;
+using Caffeine.Core.Todos;
 using H.NotifyIcon;
 using H.NotifyIcon.Core;
 using Microsoft.UI.Xaml;
@@ -23,6 +25,8 @@ public partial class App : Application
     public UsageTracker Usage { get; private set; } = null!;
 
     public TimersService Timers { get; private set; } = null!;
+
+    public TodoService Todos { get; private set; } = null!;
 
     public App()
     {
@@ -58,6 +62,7 @@ public partial class App : Application
         StartupService.RefreshPath();
         Usage = new UsageTracker(State, new DispatcherAppTimer()); // must subscribe before the initial State.Set below
         Timers = new TimersService(() => new DispatcherAppTimer());
+        Todos = new TodoService(new SystemClock(), new JsonStore<TodoList>("todos.json"));
         try
         {
             Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register();

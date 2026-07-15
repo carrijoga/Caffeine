@@ -43,6 +43,11 @@
                         <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Todos" Tag="todos">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Timers" Tag="timers">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x23F1;" />
