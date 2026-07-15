@@ -19,6 +19,7 @@ public sealed class TimersService
     public TimersService(Func<IAppTimer> timerFactory)
     {
         Config = _store.Load();
+        Config.Pomodoro.Sanitize();
 
         var clock = new SystemClock();
         Pomodoro = new PomodoroEngine(clock, Config.Pomodoro);
