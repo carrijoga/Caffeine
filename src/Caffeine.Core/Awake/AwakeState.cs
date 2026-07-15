@@ -1,6 +1,6 @@
-using Microsoft.UI.Dispatching;
+using Caffeine.Core.Common;
 
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Single source of truth for whether keep-awake is active. The tray icon,
@@ -10,7 +10,13 @@ namespace Caffeine;
 /// </summary>
 public sealed class AwakeState
 {
-    private DispatcherQueueTimer? _timer;
+    private readonly Func<IAppTimer> _timerFactory;
+    private IAppTimer? _timer;
+
+    public AwakeState(Func<IAppTimer> timerFactory)
+    {
+        _timerFactory = timerFactory;
+    }
 
     public bool IsActive { get; private set; }
 
@@ -79,11 +85,6 @@ public sealed class AwakeState
         SessionEndsAt = DateTimeOffset.Now + interval;
 
         _timer ??= CreateTimer();
-        if (_timer is null)
-        {
-            return; // no dispatcher (should not happen on the UI thread)
-        }
-
         _timer.Interval = interval;
         _timer.Start();
     }
@@ -94,17 +95,11 @@ public sealed class AwakeState
         _timer?.Stop();
     }
 
-    private DispatcherQueueTimer? CreateTimer()
+    private IAppTimer CreateTimer()
     {
-        var queue = DispatcherQueue.GetForCurrentThread();
-        if (queue is null)
-        {
-            return null;
-        }
-
-        var timer = queue.CreateTimer();
+        var timer = _timerFactory();
         timer.IsRepeating = false;
-        timer.Tick += (_, _) => Set(false);
+        timer.Tick += () => Set(false);
         return timer;
     }
 }

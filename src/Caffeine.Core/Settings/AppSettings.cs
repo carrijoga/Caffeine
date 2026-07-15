@@ -1,4 +1,4 @@
-namespace Caffeine;
+namespace Caffeine.Core.Settings;
 
 /// <summary>
 /// User-configurable settings, persisted as JSON by <see cref="SettingsService"/>.

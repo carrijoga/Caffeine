@@ -1,16 +1,17 @@
+using Caffeine.Core.Awake;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Caffeine.Pages;
 
-public sealed partial class HomePage : Page
+public sealed partial class AwakePage : Page
 {
     private readonly AwakeState _state;
     private readonly UsageTracker _usage;
     private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private bool _updatingToggle;
 
-    public HomePage()
+    public AwakePage()
     {
         var app = (App)Application.Current;
         _state = app.State;

@@ -1,4 +1,6 @@
 using System.Drawing;
+using Caffeine.Core.Awake;
+using Caffeine.Core.Settings;
 using H.NotifyIcon;
 using H.NotifyIcon.Core;
 using Microsoft.UI.Xaml;
@@ -14,7 +16,7 @@ public partial class App : Application
     private string _iconOnPath = string.Empty;
     private string _iconOffPath = string.Empty;
 
-    public AwakeState State { get; } = new();
+    public AwakeState State { get; } = new(() => new DispatcherAppTimer());
 
     public AppSettings Settings { get; private set; } = new();
 
@@ -52,7 +54,7 @@ public partial class App : Application
 
         Settings = SettingsService.Load();
         StartupService.RefreshPath();
-        Usage = new UsageTracker(State); // must subscribe before the initial State.Set below
+        Usage = new UsageTracker(State, new DispatcherAppTimer()); // must subscribe before the initial State.Set below
 
         _window = new MainWindow();
         if (Settings.RunInSystemTray)
@@ -194,4 +196,7 @@ public partial class App : Application
         _window?.AllowClose();
         Exit();
     }
+
+    /// <summary>Navigate the main window to a sidebar section by tag.</summary>
+    public void NavigateTo(string tag) => _window?.NavigateTo(tag);
 }

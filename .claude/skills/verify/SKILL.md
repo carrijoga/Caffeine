@@ -10,8 +10,8 @@ WinUI 3 desktop tray app, unpackaged, self-contained.
 ## Build & launch
 
 ```powershell
-dotnet build Caffeine.csproj -p:Platform=x64 -v:m   # ~25s
-Start-Process "bin\x64\Debug\net10.0-windows10.0.19041.0\Caffeine.exe"
+dotnet build src/Caffeine.App/Caffeine.App.csproj -p:Platform=x64 -v:m   # ~25s
+Start-Process "src\Caffeine.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Caffeine.exe"
 ```
 
 Kill any already-running instance first (`Stop-Process -Name Caffeine`) or the
@@ -31,7 +31,7 @@ app is on top — including the user's personal windows. Don't.
 UI Automation patterns work without focus and don't steal the pointer:
 
 - Window: root child with `Name = "Caffeine"`.
-- Nav items ("Home", "Settings", "Welcome to Caffeine"): `SelectionItemPattern.Select()`.
+- Nav items ("Home", "Awake", "Settings", "Welcome to Caffeine"): `SelectionItemPattern.Select()`.
 - Toggles by AutomationId (`AwakeToggle`, `RememberStateToggle`,
   `RunInTrayToggle`, `StartWithWindowsToggle`): `TogglePattern.Toggle()`. Find by **AutomationId**, not
   Name — the SettingsCard shares the toggle's Name and matches first.

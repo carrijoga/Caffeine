@@ -25,7 +25,7 @@
 
             <toolkit:SettingsCard
                 Header="1. Turn it on"
-                Description="Go to Home and flip the 'Keep screen awake' toggle. That's it — your screen stays on until you turn it off.">
+                Description="Flip the Awake toggle on the Home card, or on the Awake page. That's it — your screen stays on until you turn it off.">
                 <toolkit:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE706;" />
                 </toolkit:SettingsCard.HeaderIcon>

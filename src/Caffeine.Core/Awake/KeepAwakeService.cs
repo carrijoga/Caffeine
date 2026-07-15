@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Caffeine;
+namespace Caffeine.Core.Awake;
 
 /// <summary>
 /// Tells the Windows power manager to keep the display (and system) awake via

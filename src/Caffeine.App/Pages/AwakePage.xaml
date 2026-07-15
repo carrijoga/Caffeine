@@ -1,5 +1,5 @@
 <Page
-    x:Class="Caffeine.Pages.HomePage"
+    x:Class="Caffeine.Pages.AwakePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -23,7 +23,7 @@
         <StackPanel Padding="36,24,36,36" Spacing="4" MaxWidth="800" HorizontalAlignment="Stretch">
 
             <TextBlock
-                Text="Caffeine"
+                Text="Awake"
                 Style="{StaticResource TitleTextBlockStyle}"
                 Margin="0,0,0,4" />
             <TextBlock
