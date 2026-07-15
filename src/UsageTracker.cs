@@ -1,4 +1,4 @@
-using Microsoft.UI.Dispatching;
+using Caffeine.Core.Common;
 
 namespace Caffeine;
 
@@ -6,17 +6,17 @@ namespace Caffeine;
 /// Accumulates how long keep-awake has been active and maintains the daily
 /// killstreak. Listens to <see cref="AwakeState.Changed"/> and flushes elapsed
 /// time to disk once a minute while active, so a crash loses at most ~1 minute.
-/// Must be created on the UI thread (uses its DispatcherQueue for the timer).
+/// The flush timer must be a UI-thread timer (created on the UI thread).
 /// </summary>
 public sealed class UsageTracker
 {
     private readonly UsageStats _stats;
-    private readonly DispatcherQueueTimer _flushTimer;
+    private readonly IAppTimer _flushTimer;
     private DateTimeOffset _sessionStart;
     private DateTimeOffset _lastFlush;
     private bool _active;
 
-    public UsageTracker(AwakeState state)
+    public UsageTracker(AwakeState state, IAppTimer flushTimer)
     {
         _stats = UsageStatsService.Load();
 
@@ -28,9 +28,10 @@ public sealed class UsageTracker
             _stats.CurrentStreakDays = 0;
         }
 
-        _flushTimer = DispatcherQueue.GetForCurrentThread().CreateTimer();
+        _flushTimer = flushTimer;
         _flushTimer.Interval = TimeSpan.FromMinutes(1);
-        _flushTimer.Tick += (_, _) => Flush();
+        _flushTimer.IsRepeating = true;
+        _flushTimer.Tick += Flush;
 
         state.Changed += OnStateChanged;
     }

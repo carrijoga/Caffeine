@@ -14,7 +14,7 @@ public partial class App : Application
     private string _iconOnPath = string.Empty;
     private string _iconOffPath = string.Empty;
 
-    public AwakeState State { get; } = new();
+    public AwakeState State { get; } = new(() => new DispatcherAppTimer());
 
     public AppSettings Settings { get; private set; } = new();
 
@@ -52,7 +52,7 @@ public partial class App : Application
 
         Settings = SettingsService.Load();
         StartupService.RefreshPath();
-        Usage = new UsageTracker(State); // must subscribe before the initial State.Set below
+        Usage = new UsageTracker(State, new DispatcherAppTimer()); // must subscribe before the initial State.Set below
 
         _window = new MainWindow();
         if (Settings.RunInSystemTray)
