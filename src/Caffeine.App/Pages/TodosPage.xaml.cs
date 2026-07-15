@@ -116,7 +116,7 @@ public sealed partial class TodosPage : Page
 
         var delete = new Button
         {
-            Content = new FontIcon { Glyph = "", FontSize = 14 },
+            Content = new FontIcon { Glyph = "\uE74D", FontSize = 14 },
             Padding = new Thickness(8),
             VerticalAlignment = VerticalAlignment.Center,
         };

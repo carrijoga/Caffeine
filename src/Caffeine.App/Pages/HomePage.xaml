@@ -168,7 +168,7 @@
                 </Grid>
             </Button>
 
-            <!-- Habits and Todos cards land here in later stages. -->
+            <!-- Stage 4 adds the Habits card above the Todos card. -->
         </StackPanel>
     </ScrollViewer>
 </Page>
