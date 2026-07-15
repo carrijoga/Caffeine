@@ -43,14 +43,19 @@
                         <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Settings" Tag="settings">
+                <NavigationViewItem Content="Awake" Tag="awake">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;" />
+                        <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x2615;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Settings" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Welcome to Caffeine" Tag="welcome">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE82F;" />

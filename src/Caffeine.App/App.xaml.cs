@@ -196,4 +196,7 @@ public partial class App : Application
         _window?.AllowClose();
         Exit();
     }
+
+    /// <summary>Navigate the main window to a sidebar section by tag.</summary>
+    public void NavigateTo(string tag) => _window?.NavigateTo(tag);
 }
