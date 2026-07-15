@@ -40,6 +40,49 @@
                 TextWrapping="Wrap"
                 Margin="0,0,0,20" />
 
+            <!-- Timers module card: whole card navigates to the Timers page. -->
+            <Button
+                Style="{StaticResource HubCardButtonStyle}"
+                Click="OpenTimers_Click"
+                AutomationProperties.Name="Open Timers"
+                Margin="0,0,0,4">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Width="48" Height="48" VerticalAlignment="Center">
+                        <Border
+                            CornerRadius="24"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                        <TextBlock
+                            Text="&#x23F1;&#xFE0F;"
+                            FontSize="22"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Timers" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock
+                            x:Name="TimersCaption"
+                            Text="No timer running"
+                            Style="{StaticResource HubCaptionStyle}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="2"
+                        x:Name="StartPomodoroButton"
+                        Content="Start Pomodoro"
+                        VerticalAlignment="Center"
+                        Tapped="StartPomodoro_Tapped"
+                        Click="StartPomodoro_Click" />
+                </Grid>
+            </Button>
+
             <!-- Awake module card: whole card navigates to the Awake page. -->
             <Button
                 Style="{StaticResource HubCardButtonStyle}"
@@ -91,7 +134,7 @@
                 </Grid>
             </Button>
 
-            <!-- Habits, Todos and Timers cards land here in later stages. -->
+            <!-- Habits and Todos cards land here in later stages. -->
         </StackPanel>
     </ScrollViewer>
 </Page>

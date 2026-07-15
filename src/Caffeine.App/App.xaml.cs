@@ -22,6 +22,8 @@ public partial class App : Application
 
     public UsageTracker Usage { get; private set; } = null!;
 
+    public TimersService Timers { get; private set; } = null!;
+
     public App()
     {
         InitializeComponent();
@@ -55,6 +57,15 @@ public partial class App : Application
         Settings = SettingsService.Load();
         StartupService.RefreshPath();
         Usage = new UsageTracker(State, new DispatcherAppTimer()); // must subscribe before the initial State.Set below
+        Timers = new TimersService(() => new DispatcherAppTimer());
+        try
+        {
+            Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register();
+        }
+        catch
+        {
+            // No toast support (e.g. shell restrictions) — timers still work.
+        }
 
         _window = new MainWindow();
         if (Settings.RunInSystemTray)
@@ -194,6 +205,14 @@ public partial class App : Application
         State.Set(false);
         _trayIcon?.Dispose();
         _window?.AllowClose();
+        try
+        {
+            Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Unregister();
+        }
+        catch
+        {
+        }
+
         Exit();
     }
 

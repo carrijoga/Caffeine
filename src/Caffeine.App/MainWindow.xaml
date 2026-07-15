@@ -43,6 +43,11 @@
                         <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Timers" Tag="timers">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x23F1;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Awake" Tag="awake">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x2615;" />

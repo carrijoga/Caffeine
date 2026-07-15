@@ -1,0 +1,143 @@
+<Page
+    x:Class="Caffeine.Pages.TimersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Padding="36,24,36,36" Spacing="16" MaxWidth="800" HorizontalAlignment="Stretch">
+
+            <TextBlock Text="Timers" Style="{StaticResource TitleTextBlockStyle}" />
+
+            <SelectorBar x:Name="TabBar" SelectionChanged="TabBar_SelectionChanged">
+                <SelectorBarItem x:Name="PomodoroTab" Text="Pomodoro" IsSelected="True" />
+                <SelectorBarItem x:Name="CountdownTab" Text="Countdown" />
+                <SelectorBarItem x:Name="StopwatchTab" Text="Stopwatch" />
+            </SelectorBar>
+
+            <!-- Pomodoro tab -->
+            <StackPanel x:Name="PomodoroPanel" Spacing="12">
+                <TextBlock
+                    x:Name="PomodoroPhaseText"
+                    Text="Ready"
+                    Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    x:Name="PomodoroTimeText"
+                    Text="25:00"
+                    FontSize="56"
+                    FontWeight="SemiBold" />
+                <TextBlock
+                    x:Name="PomodoroSessionsText"
+                    Text="0 focus sessions completed"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        x:Name="PomodoroStartPauseButton"
+                        Content="Start"
+                        MinWidth="96"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="PomodoroStartPause_Click" />
+                    <Button x:Name="PomodoroSkipButton" Content="Skip" IsEnabled="False" Click="PomodoroSkip_Click" />
+                    <Button Content="Reset" Click="PomodoroReset_Click" />
+                </StackPanel>
+
+                <Expander
+                    Header="Pomodoro settings"
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch">
+                    <StackPanel Spacing="8">
+                        <NumberBox
+                            x:Name="WorkMinutesBox"
+                            Header="Focus (minutes)"
+                            Minimum="1" Maximum="180" SmallChange="5"
+                            SpinButtonPlacementMode="Inline"
+                            ValueChanged="PomodoroConfig_Changed" />
+                        <NumberBox
+                            x:Name="ShortBreakMinutesBox"
+                            Header="Short break (minutes)"
+                            Minimum="1" Maximum="60"
+                            SpinButtonPlacementMode="Inline"
+                            ValueChanged="PomodoroConfig_Changed" />
+                        <NumberBox
+                            x:Name="LongBreakMinutesBox"
+                            Header="Long break (minutes)"
+                            Minimum="1" Maximum="120" SmallChange="5"
+                            SpinButtonPlacementMode="Inline"
+                            ValueChanged="PomodoroConfig_Changed" />
+                        <NumberBox
+                            x:Name="CyclesBox"
+                            Header="Focus sessions before a long break"
+                            Minimum="1" Maximum="12"
+                            SpinButtonPlacementMode="Inline"
+                            ValueChanged="PomodoroConfig_Changed" />
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+
+            <!-- Countdown tab -->
+            <StackPanel x:Name="CountdownPanel" Spacing="12" Visibility="Collapsed">
+                <TextBlock
+                    x:Name="CountdownTimeText"
+                    Text="0:00"
+                    FontSize="56"
+                    FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumberBox
+                        x:Name="CountdownHoursBox"
+                        Header="Hours"
+                        Minimum="0" Maximum="23" Value="0"
+                        SpinButtonPlacementMode="Compact"
+                        Width="104" />
+                    <NumberBox
+                        x:Name="CountdownMinutesBox"
+                        Header="Minutes"
+                        Minimum="0" Maximum="59" Value="10"
+                        SpinButtonPlacementMode="Compact"
+                        Width="104" />
+                    <NumberBox
+                        x:Name="CountdownSecondsBox"
+                        Header="Seconds"
+                        Minimum="0" Maximum="59" Value="0"
+                        SpinButtonPlacementMode="Compact"
+                        Width="104" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="5 min" Tag="5" Click="CountdownPreset_Click" />
+                    <Button Content="10 min" Tag="10" Click="CountdownPreset_Click" />
+                    <Button Content="25 min" Tag="25" Click="CountdownPreset_Click" />
+                    <Button Content="60 min" Tag="60" Click="CountdownPreset_Click" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        x:Name="CountdownStartPauseButton"
+                        Content="Start"
+                        MinWidth="96"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="CountdownStartPause_Click" />
+                    <Button Content="Reset" Click="CountdownReset_Click" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Stopwatch tab -->
+            <StackPanel x:Name="StopwatchPanel" Spacing="12" Visibility="Collapsed">
+                <TextBlock
+                    x:Name="StopwatchTimeText"
+                    Text="0:00"
+                    FontSize="56"
+                    FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        x:Name="StopwatchStartPauseButton"
+                        Content="Start"
+                        MinWidth="96"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="StopwatchStartPause_Click" />
+                    <Button x:Name="StopwatchLapButton" Content="Lap" IsEnabled="False" Click="StopwatchLap_Click" />
+                    <Button Content="Reset" Click="StopwatchReset_Click" />
+                </StackPanel>
+                <ItemsControl x:Name="LapsList" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

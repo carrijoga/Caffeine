@@ -31,7 +31,7 @@ app is on top — including the user's personal windows. Don't.
 UI Automation patterns work without focus and don't steal the pointer:
 
 - Window: root child with `Name = "Caffeine"`.
-- Nav items ("Home", "Awake", "Settings", "Welcome to Caffeine"): `SelectionItemPattern.Select()`.
+- Nav items ("Home", "Timers", "Awake", "Settings", "Welcome to Caffeine"): `SelectionItemPattern.Select()`.
 - Toggles by AutomationId (`AwakeToggle`, `RememberStateToggle`,
   `RunInTrayToggle`, `StartWithWindowsToggle`): `TogglePattern.Toggle()`. Find by **AutomationId**, not
   Name — the SettingsCard shares the toggle's Name and matches first.
