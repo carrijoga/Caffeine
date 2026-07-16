@@ -1,6 +1,8 @@
 using Caffeine.Core.Awake;
+using Caffeine.Core.Habits;
 using Caffeine.Core.Todos;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 
@@ -11,6 +13,7 @@ public sealed partial class HomePage : Page
     private readonly AwakeState _state;
     private readonly TimersService _timers;
     private readonly TodoService _todos;
+    private readonly HabitService _habits;
     private bool _updatingToggle;
 
     public HomePage()
@@ -19,6 +22,7 @@ public sealed partial class HomePage : Page
         _state = app.State;
         _timers = app.Timers;
         _todos = app.Todos;
+        _habits = app.Habits;
         InitializeComponent();
 
         _state.Changed += OnStateChanged;
@@ -32,6 +36,7 @@ public sealed partial class HomePage : Page
         OnStateChanged(_state.IsActive);
         RefreshTimersCard();
         RefreshTodosCard();
+        BuildHabitsCard();
     }
 
     private void OnStateChanged(bool active)
@@ -107,4 +112,45 @@ public sealed partial class HomePage : Page
 
     private void OpenTodos_Click(object sender, RoutedEventArgs e) =>
         ((App)Application.Current).NavigateTo("todos");
+
+    /// <summary>Builds the card's habit checkboxes once; the caption refreshes on every check-off.</summary>
+    private void BuildHabitsCard()
+    {
+        HomeHabitRows.Children.Clear();
+        foreach (Habit habit in _habits.Habits)
+        {
+            var check = new CheckBox
+            {
+                IsChecked = _habits.IsDone(habit, _habits.Today),
+                Content = $"{habit.Icon} {habit.Name}",
+                MinWidth = 0,
+            };
+            AutomationProperties.SetName(check, habit.Name);
+            check.Tapped += (_, e) => e.Handled = true;
+            check.Checked += (_, _) =>
+            {
+                _habits.SetDone(habit.Id, _habits.Today, true);
+                RefreshHabitsCaption();
+            };
+            check.Unchecked += (_, _) =>
+            {
+                _habits.SetDone(habit.Id, _habits.Today, false);
+                RefreshHabitsCaption();
+            };
+            HomeHabitRows.Children.Add(check);
+        }
+
+        RefreshHabitsCaption();
+    }
+
+    private void RefreshHabitsCaption()
+    {
+        int total = _habits.Habits.Count;
+        HabitsCaption.Text = total == 0
+            ? "No habits yet"
+            : $"{_habits.Habits.Count(h => _habits.IsDone(h, _habits.Today))} of {total} done today";
+    }
+
+    private void OpenHabits_Click(object sender, RoutedEventArgs e) =>
+        ((App)Application.Current).NavigateTo("habits");
 }

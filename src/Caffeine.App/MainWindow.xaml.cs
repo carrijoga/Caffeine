@@ -65,6 +65,7 @@ public sealed partial class MainWindow : Window
         {
             Type page = (string)item.Tag switch
             {
+                "habits" => typeof(Pages.HabitsPage),
                 "todos" => typeof(Pages.TodosPage),
                 "timers" => typeof(Pages.TimersPage),
                 "awake" => typeof(Pages.AwakePage),
@@ -80,7 +81,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    /// <summary>Selects the sidebar item with the given Tag ("home", "todos", "timers", "awake", "settings", "welcome").</summary>
+    /// <summary>Selects the sidebar item with the given Tag ("home", "habits", "todos", "timers", "awake", "settings", "welcome").</summary>
     public void NavigateTo(string tag)
     {
         foreach (object entry in NavView.MenuItems.Concat(NavView.FooterMenuItems))

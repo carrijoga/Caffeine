@@ -1,6 +1,7 @@
 using System.Drawing;
 using Caffeine.Core.Awake;
 using Caffeine.Core.Common;
+using Caffeine.Core.Habits;
 using Caffeine.Core.Settings;
 using Caffeine.Core.Todos;
 using H.NotifyIcon;
@@ -27,6 +28,8 @@ public partial class App : Application
     public TimersService Timers { get; private set; } = null!;
 
     public TodoService Todos { get; private set; } = null!;
+
+    public HabitService Habits { get; private set; } = null!;
 
     public App()
     {
@@ -63,6 +66,7 @@ public partial class App : Application
         Usage = new UsageTracker(State, new DispatcherAppTimer()); // must subscribe before the initial State.Set below
         Timers = new TimersService(() => new DispatcherAppTimer());
         Todos = new TodoService(new SystemClock(), new JsonStore<TodoList>("todos.json"));
+        Habits = new HabitService(new SystemClock(), new JsonStore<HabitList>("habits.json"));
         try
         {
             Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register();
