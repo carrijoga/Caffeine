@@ -1,3 +1,4 @@
+using Caffeine.Core.Common;
 using Caffeine.Core.Habits;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -12,13 +13,27 @@ namespace Caffeine.Pages;
 public sealed partial class HabitsPage : Page
 {
     private readonly HabitService _habits;
+    private readonly DayChangeWatcher _dayChanges;
 
     public HabitsPage()
     {
         _habits = ((App)Application.Current).Habits;
+        _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
         RebuildList();
+
+        _dayChanges.DayChanged += OnDayChanged;
+        ActualThemeChanged += OnThemeChanged;
+        Unloaded += (_, _) =>
+        {
+            _dayChanges.DayChanged -= OnDayChanged;
+            ActualThemeChanged -= OnThemeChanged;
+        };
     }
+
+    private void OnDayChanged() => RebuildList();
+
+    private void OnThemeChanged(FrameworkElement sender, object args) => RebuildList();
 
     private void NewNameBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -168,11 +183,22 @@ public sealed partial class HabitsPage : Page
         panel.Children.Add(save);
 
         var flyout = new Flyout { Content = panel };
-        save.Click += (_, _) =>
+
+        void Commit()
         {
             _habits.Rename(habit.Id, box.Text);
             flyout.Hide();
             RebuildList();
+        }
+
+        save.Click += (_, _) => Commit();
+        box.KeyDown += (_, e) =>
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                Commit();
+                e.Handled = true;
+            }
         };
         return flyout;
     }
