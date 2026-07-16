@@ -1,0 +1,74 @@
+<Page
+    x:Class="Caffeine.Pages.HabitsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Page.Resources>
+        <!-- Row chrome matching the hub cards on Home (same values as TodosPage's TodoRowStyle). -->
+        <Style x:Key="HabitRowStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+            <Setter Property="Padding" Value="16,10" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Padding="36,24,36,36" MaxWidth="800">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Text="Habits"
+            Style="{StaticResource TitleTextBlockStyle}"
+            Margin="0,0,0,4" />
+        <TextBlock
+            Grid.Row="1"
+            Text="Small things, done daily."
+            Style="{StaticResource BodyTextBlockStyle}"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            TextWrapping="Wrap"
+            Margin="0,0,0,20" />
+
+        <Grid Grid.Row="2" ColumnSpacing="8" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox
+                x:Name="NewNameBox"
+                PlaceholderText="Add a habit…"
+                KeyDown="NewNameBox_KeyDown" />
+            <TextBox
+                x:Name="NewIconBox"
+                Grid.Column="1"
+                Width="64"
+                MaxLength="8"
+                PlaceholderText="&#x2B50;"
+                AutomationProperties.Name="Icon" />
+            <Button
+                Grid.Column="2"
+                Content="Add"
+                Style="{StaticResource AccentButtonStyle}"
+                Click="Add_Click" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="3">
+            <StackPanel>
+                <TextBlock
+                    x:Name="EmptyText"
+                    Text="No habits yet — add your first above."
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Margin="0,8,0,0"
+                    Visibility="Collapsed" />
+                <StackPanel x:Name="HabitRows" Spacing="4" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

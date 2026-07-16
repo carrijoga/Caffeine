@@ -16,8 +16,8 @@
                 Spacing="12"
                 Padding="16,0"
                 VerticalAlignment="Center">
-                <TextBlock
-                    Text="&#x2615;"
+                <FontIcon
+                    Glyph="&#xEC32;"
                     FontSize="16"
                     VerticalAlignment="Center" />
                 <TextBlock
@@ -43,14 +43,34 @@
                         <FontIcon Glyph="&#xE80F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Settings" Tag="settings">
+                <NavigationViewItem Content="Habits" Tag="habits">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;" />
+                        <FontIcon Glyph="&#xE72C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Todos" Tag="todos">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Timers" Tag="timers">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE916;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Awake" Tag="awake">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEC32;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Settings" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Welcome to Caffeine" Tag="welcome">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE82F;" />

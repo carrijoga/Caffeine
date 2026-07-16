@@ -3,8 +3,10 @@
     <Platform Name="ARM64" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="Caffeine.csproj">
+  <Project Path="src/Caffeine.App/Caffeine.App.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="src/Caffeine.Core/Caffeine.Core.csproj" />
+  <Project Path="tests/Caffeine.Core.Tests/Caffeine.Core.Tests.csproj" />
 </Solution>

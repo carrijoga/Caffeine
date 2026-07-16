@@ -65,6 +65,10 @@ public sealed partial class MainWindow : Window
         {
             Type page = (string)item.Tag switch
             {
+                "habits" => typeof(Pages.HabitsPage),
+                "todos" => typeof(Pages.TodosPage),
+                "timers" => typeof(Pages.TimersPage),
+                "awake" => typeof(Pages.AwakePage),
                 "settings" => typeof(Pages.SettingsPage),
                 "welcome" => typeof(Pages.WelcomePage),
                 _ => typeof(Pages.HomePage),
@@ -73,6 +77,19 @@ public sealed partial class MainWindow : Window
             if (ContentFrame.CurrentSourcePageType != page)
             {
                 ContentFrame.Navigate(page);
+            }
+        }
+    }
+
+    /// <summary>Selects the sidebar item with the given Tag ("home", "habits", "todos", "timers", "awake", "settings", "welcome").</summary>
+    public void NavigateTo(string tag)
+    {
+        foreach (object entry in NavView.MenuItems.Concat(NavView.FooterMenuItems))
+        {
+            if (entry is NavigationViewItem item && (string)item.Tag == tag)
+            {
+                NavView.SelectedItem = item;
+                return;
             }
         }
     }
