@@ -1,6 +1,6 @@
 namespace Caffeine.Core.Habits;
 
-/// <summary>One daily habit; persisted inside habits.json.</summary>
+/// <summary>One habit; persisted inside habits.json.</summary>
 public sealed class Habit
 {
     public const string DefaultIcon = "⭐";
@@ -13,6 +13,9 @@ public sealed class Habit
     public string Icon { get; set; } = DefaultIcon;
 
     public DateOnly CreatedOn { get; set; }
+
+    /// <summary>Days of the week this habit is scheduled on. Defaults to every day.</summary>
+    public Weekdays Repeat { get; set; } = Weekdays.All;
 
     /// <summary>The completion log: every day this habit was checked off.</summary>
     public HashSet<DateOnly> CompletedOn { get; set; } = new();

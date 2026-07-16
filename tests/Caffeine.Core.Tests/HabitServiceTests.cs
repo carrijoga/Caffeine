@@ -69,6 +69,16 @@ public class HabitServiceTests : IDisposable
     }
 
     [Fact]
+    public void Add_DefaultsRepeatToEveryDay()
+    {
+        var service = CreateService();
+
+        Habit habit = service.Add("stretch")!;
+
+        Assert.Equal(Weekdays.All, habit.Repeat);
+    }
+
+    [Fact]
     public void Rename_TrimsNewName_AndIgnoresEmpty()
     {
         var service = CreateService();
