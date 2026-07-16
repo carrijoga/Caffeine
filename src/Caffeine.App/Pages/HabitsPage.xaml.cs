@@ -40,19 +40,57 @@ public sealed partial class HabitsPage : Page
     {
         if (e.Key == VirtualKey.Enter)
         {
-            AddHabit();
+            _ = ShowAddDialogAsync();
             e.Handled = true;
         }
     }
 
-    private void Add_Click(object sender, RoutedEventArgs e) => AddHabit();
+    private void Add_Click(object sender, RoutedEventArgs e) => _ = ShowAddDialogAsync();
 
-    private void AddHabit()
+    /// <summary>Opens the add dialog pre-filled from the inline name/icon boxes, with a day picker defaulting to every day.</summary>
+    private async Task ShowAddDialogAsync()
     {
-        if (_habits.Add(NewNameBox.Text, NewIconBox.Text) is null)
+        string initialName = NewNameBox.Text;
+        string initialIcon = NewIconBox.Text;
+
+        var nameBox = new TextBox { Text = initialName, PlaceholderText = "Habit name" };
+        AutomationProperties.SetName(nameBox, "Habit name");
+        var iconBox = new TextBox { Text = initialIcon, Width = 64, MaxLength = 8, PlaceholderText = "⭐" };
+        AutomationProperties.SetName(iconBox, "Icon");
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Add habit",
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        Func<Weekdays>? getRepeat = null;
+        StackPanel picker = WeekdayPicker.Build(
+            Weekdays.All,
+            out getRepeat,
+            onChanged: () => dialog.IsPrimaryButtonEnabled = getRepeat!() != Weekdays.None);
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(nameBox);
+        content.Children.Add(iconBox);
+        content.Children.Add(picker);
+        dialog.Content = content;
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        Habit? habit = _habits.Add(nameBox.Text, iconBox.Text);
+        if (habit is null)
         {
             return; // whitespace-only name — nothing to add
         }
+
+        _habits.SetRepeat(habit.Id, getRepeat());
 
         NewNameBox.Text = string.Empty;
         NewIconBox.Text = string.Empty;
