@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
+using System.Linq;
 using Windows.System;
 
 namespace Caffeine.Pages;
@@ -62,12 +63,13 @@ public sealed partial class HabitsPage : Page
     private void RebuildList()
     {
         HabitRows.Children.Clear();
-        foreach (Habit habit in _habits.Habits)
+        List<Habit> today = _habits.Habits.Where(h => _habits.IsScheduled(h, _habits.Today)).ToList();
+        foreach (Habit habit in today)
         {
             HabitRows.Children.Add(BuildRow(habit));
         }
 
-        EmptyText.Visibility = _habits.Habits.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Visibility = today.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private Border BuildRow(Habit habit)
