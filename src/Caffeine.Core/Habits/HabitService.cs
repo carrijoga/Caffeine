@@ -72,6 +72,34 @@ public sealed class HabitService
         }
     }
 
+    /// <summary>True when <paramref name="habit"/> is scheduled to run on <paramref name="date"/>'s day of week.</summary>
+    public bool IsScheduled(Habit habit, DateOnly date) => habit.Repeat.HasFlag(ToWeekdayFlag(date.DayOfWeek));
+
+    /// <summary>Updates which days of the week the habit repeats on.</summary>
+    public void SetRepeat(Guid id, Weekdays repeat)
+    {
+        Habit? habit = _list.Items.FirstOrDefault(h => h.Id == id);
+        if (habit is null || habit.Repeat == repeat)
+        {
+            return;
+        }
+
+        habit.Repeat = repeat;
+        _store.Save(_list);
+    }
+
+    private static Weekdays ToWeekdayFlag(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Sunday => Weekdays.Sunday,
+        DayOfWeek.Monday => Weekdays.Monday,
+        DayOfWeek.Tuesday => Weekdays.Tuesday,
+        DayOfWeek.Wednesday => Weekdays.Wednesday,
+        DayOfWeek.Thursday => Weekdays.Thursday,
+        DayOfWeek.Friday => Weekdays.Friday,
+        DayOfWeek.Saturday => Weekdays.Saturday,
+        _ => Weekdays.None,
+    };
+
     public bool IsDone(Habit habit, DateOnly date) => habit.CompletedOn.Contains(date);
 
     public void SetDone(Guid id, DateOnly date, bool done)

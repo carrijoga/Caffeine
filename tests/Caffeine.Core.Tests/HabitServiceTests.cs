@@ -267,4 +267,48 @@ public class HabitServiceTests : IDisposable
 
         Assert.Contains("\"Repeat\": \"All\"", json);
     }
+
+    [Fact]
+    public void IsScheduled_ReturnsTrueOnlyForFlaggedDays()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+        service.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        var tuesday = new DateOnly(2026, 7, 21);   // a known Tuesday
+        var wednesday = new DateOnly(2026, 7, 22); // a known Wednesday
+
+        Assert.True(service.IsScheduled(habit, tuesday));
+        Assert.False(service.IsScheduled(habit, wednesday));
+    }
+
+    [Fact]
+    public void SetRepeat_UpdatesAndPersists_AndIgnoresUnknownId()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+
+        service.SetRepeat(habit.Id, Weekdays.Monday | Weekdays.Friday);
+        Assert.Equal(Weekdays.Monday | Weekdays.Friday, habit.Repeat);
+
+        service.SetRepeat(Guid.NewGuid(), Weekdays.All); // unknown id — no throw, no effect
+        Assert.Equal(Weekdays.Monday | Weekdays.Friday, habit.Repeat);
+
+        var reloaded = CreateService();
+        Assert.Equal(Weekdays.Monday | Weekdays.Friday, reloaded.Habits.Single().Repeat);
+    }
+
+    [Fact]
+    public void Repeat_PersistsAsReadableNames_ViaSetRepeat()
+    {
+        var first = CreateService();
+        Habit habit = first.Add("trash")!;
+        first.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        string json = File.ReadAllText(Path.Combine(_dir, "habits.json"));
+        Assert.Contains("Tuesday, Thursday, Saturday", json);
+
+        var second = CreateService();
+        Assert.Equal(Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday, second.Habits.Single().Repeat);
+    }
 }
