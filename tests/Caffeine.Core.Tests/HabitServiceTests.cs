@@ -256,4 +256,15 @@ public class HabitServiceTests : IDisposable
         Assert.Equal("B", reloaded.Icon);
         Assert.Equal(2, second.CurrentStreak(reloaded));
     }
+
+    [Fact]
+    public void Habit_Repeat_SerializesAsReadableNames()
+    {
+        var service = CreateService();
+        service.Add("stretch");
+
+        string json = File.ReadAllText(Path.Combine(_dir, "habits.json"));
+
+        Assert.Contains("\"Repeat\": \"All\"", json);
+    }
 }

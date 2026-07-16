@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Caffeine.Core.Common;
 
@@ -12,7 +13,11 @@ namespace Caffeine.Core.Common;
 public sealed class JsonStore<T>
     where T : class, new()
 {
-    private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     private readonly string _path;
 
