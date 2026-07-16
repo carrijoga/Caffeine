@@ -397,4 +397,30 @@ public class HabitServiceTests : IDisposable
 
         Assert.Equal(3, service.CurrentStreak(habit));
     }
+
+    [Fact]
+    public void Load_PreExistingRecordWithoutRepeat_DefaultsToEveryDay()
+    {
+        Directory.CreateDirectory(_dir);
+        string legacyJson = """
+        {
+          "Items": [
+            {
+              "Id": "11111111-1111-1111-1111-111111111111",
+              "Name": "old habit",
+              "Icon": "⭐",
+              "CreatedOn": "2026-01-01",
+              "CompletedOn": ["2026-01-01"]
+            }
+          ]
+        }
+        """;
+        File.WriteAllText(Path.Combine(_dir, "habits.json"), legacyJson);
+
+        var service = CreateService();
+
+        Habit habit = Assert.Single(service.Habits);
+        Assert.Equal("old habit", habit.Name);
+        Assert.Equal(Weekdays.All, habit.Repeat);
+    }
 }
