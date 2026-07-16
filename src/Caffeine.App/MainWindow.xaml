@@ -16,8 +16,8 @@
                 Spacing="12"
                 Padding="16,0"
                 VerticalAlignment="Center">
-                <TextBlock
-                    Text="&#x2615;"
+                <FontIcon
+                    Glyph="&#xEC32;"
                     FontSize="16"
                     VerticalAlignment="Center" />
                 <TextBlock
@@ -45,7 +45,7 @@
                 </NavigationViewItem>
                 <NavigationViewItem Content="Habits" Tag="habits">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE787;" />
+                        <FontIcon Glyph="&#xE72C;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="Todos" Tag="todos">
@@ -55,12 +55,12 @@
                 </NavigationViewItem>
                 <NavigationViewItem Content="Timers" Tag="timers">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x23F1;" />
+                        <FontIcon Glyph="&#xE916;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="Awake" Tag="awake">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x2615;" />
+                        <FontIcon Glyph="&#xEC32;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
