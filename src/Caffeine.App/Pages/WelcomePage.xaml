@@ -12,43 +12,59 @@
                 Style="{StaticResource TitleTextBlockStyle}"
                 Margin="0,0,0,4" />
             <TextBlock
-                Text="Caffeine keeps your PC and display awake so your machine won't lock the screen or go to sleep while you're away from the keyboard — during a download, a long read, or a presentation."
+                Text="Caffeine is a small hub for your day. It keeps your PC awake when you need it to, and adds a few light-touch tools — habits, a to-do list, and focus timers — that live in the same tray app and open on a single Home dashboard."
                 Style="{StaticResource BodyTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextWrapping="Wrap"
                 Margin="0,0,0,20" />
 
             <TextBlock
-                Text="Getting started"
+                Text="What's inside"
                 Style="{StaticResource BodyStrongTextBlockStyle}"
                 Margin="1,0,0,8" />
 
             <toolkit:SettingsCard
-                Header="1. Turn it on"
-                Description="Flip the Awake toggle on the Home card, or on the Awake page. That's it — your screen stays on until you turn it off.">
+                Header="Home"
+                Description="Your day at a glance — one card per module. Check off a habit or a to-do, start a Pomodoro, or toggle keep-awake without leaving the dashboard.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Habits"
+                Description="Small things done daily. Each habit tracks its current streak, best streak, and a 7-day history. Missing today doesn't break the streak until the day is over.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE72C;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Todos"
+                Description="One list to get things out of your head. Add a to-do with an optional due date; overdue and due-today items sort to the top, with a separate Completed view.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE9D5;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Timers"
+                Description="Pomodoro with configurable focus and break lengths, a countdown with quick presets, and a stopwatch with laps. One runs at a time and keeps going while you work in other tabs.">
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE916;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard
+                Header="Awake"
+                Description="The original: keep your PC and display awake so it won't lock or sleep while you're away — during a download, a long read, or a presentation. Toggle it here, on the Home card, or from the tray icon.">
                 <toolkit:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xE706;" />
                 </toolkit:SettingsCard.HeaderIcon>
             </toolkit:SettingsCard>
 
-            <toolkit:SettingsCard
-                Header="2. Use the tray icon"
-                Description="Closing the window keeps Caffeine running in the system tray. Left-click the cup to toggle; right-click for options. The full cup means it's active.">
-                <toolkit:SettingsCard.HeaderIcon>
-                    <FontIcon Glyph="&#xE8A5;" />
-                </toolkit:SettingsCard.HeaderIcon>
-            </toolkit:SettingsCard>
-
-            <toolkit:SettingsCard
-                Header="3. Make it yours"
-                Description="In Settings you can have Caffeine remember the toggle between restarts, or exit instead of hiding to the tray when you close the window.">
-                <toolkit:SettingsCard.HeaderIcon>
-                    <FontIcon Glyph="&#xE713;" />
-                </toolkit:SettingsCard.HeaderIcon>
-            </toolkit:SettingsCard>
-
             <toolkit:SettingsExpander
-                Header="How it works"
+                Header="How keep-awake works"
                 Description="No simulated keypresses, no timers — zero power overhead"
                 Margin="0,16,0,0">
                 <toolkit:SettingsExpander.HeaderIcon>
@@ -57,7 +73,7 @@
                 <toolkit:SettingsExpander.Items>
                     <toolkit:SettingsCard ContentAlignment="Left">
                         <TextBlock
-                            Text="Caffeine asks the Windows power manager to keep the display and system awake using the same API video players use (SetThreadExecutionState). It's a single call when you toggle — the app sits completely idle in between, and Windows automatically clears the request if Caffeine exits."
+                            Text="Caffeine asks the Windows power manager to keep the display and system awake using the same API video players use (SetThreadExecutionState). It's a single call when you toggle — the app sits completely idle in between, and Windows automatically clears the request if Caffeine exits. Closing the window keeps it running in the tray; left-click the cup to toggle, right-click for options."
                             Style="{StaticResource BodyTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap" />

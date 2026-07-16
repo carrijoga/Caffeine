@@ -18,6 +18,7 @@ public partial class App : Application
     private ToggleMenuFlyoutItem? _trayToggleItem;
     private string _iconOnPath = string.Empty;
     private string _iconOffPath = string.Empty;
+    private IAppTimer? _dayTick;
 
     public AwakeState State { get; } = new(() => new DispatcherAppTimer());
 
@@ -30,6 +31,8 @@ public partial class App : Application
     public TodoService Todos { get; private set; } = null!;
 
     public HabitService Habits { get; private set; } = null!;
+
+    public DayChangeWatcher DayChanges { get; private set; } = null!;
 
     public App()
     {
@@ -67,6 +70,16 @@ public partial class App : Application
         Timers = new TimersService(() => new DispatcherAppTimer());
         Todos = new TodoService(new SystemClock(), new JsonStore<TodoList>("todos.json"));
         Habits = new HabitService(new SystemClock(), new JsonStore<HabitList>("habits.json"));
+
+        DayChanges = new DayChangeWatcher(new SystemClock());
+        var dayTick = new DispatcherAppTimer
+        {
+            Interval = TimeSpan.FromMinutes(1),
+            IsRepeating = true,
+        };
+        dayTick.Tick += () => DayChanges.Poll();
+        dayTick.Start();
+        _dayTick = dayTick; // keep a reference so it isn't collected
         try
         {
             Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register();

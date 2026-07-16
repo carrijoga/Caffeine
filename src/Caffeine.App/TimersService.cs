@@ -133,6 +133,7 @@ public sealed class TimersService
         Config.Pomodoro.ShortBreakMinutes = shortBreakMinutes;
         Config.Pomodoro.LongBreakMinutes = longBreakMinutes;
         Config.Pomodoro.CyclesPerLongBreak = cyclesPerLongBreak;
+        Config.Pomodoro.Sanitize();
         _store.Save(Config);
     }
 

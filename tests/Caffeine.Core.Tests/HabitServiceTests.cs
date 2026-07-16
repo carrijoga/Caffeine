@@ -215,6 +215,22 @@ public class HabitServiceTests : IDisposable
     }
 
     [Fact]
+    public void LastSevenDays_MarksOldestDay_WhenDoneSevenDaysAgo()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("Read")!;
+
+        // Today - 6 is index 0 (the oldest slot in the 7-day window).
+        service.SetDone(habit.Id, service.Today.AddDays(-6), true);
+
+        IReadOnlyList<bool> days = service.LastSevenDays(habit);
+
+        Assert.True(days[0]);   // oldest day is inclusive
+        Assert.False(days[5]);  // an untouched interior day
+        Assert.False(days[6]);  // today, not marked
+    }
+
+    [Fact]
     public void Changes_PersistAcrossReload()
     {
         var first = CreateService();

@@ -1,3 +1,4 @@
+using Caffeine.Core.Common;
 using Caffeine.Core.Todos;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -11,16 +12,30 @@ namespace Caffeine.Pages;
 public sealed partial class TodosPage : Page
 {
     private readonly TodoService _todos;
+    private readonly DayChangeWatcher _dayChanges;
     private bool _showCompleted;
 
     public TodosPage()
     {
         _todos = ((App)Application.Current).Todos;
+        _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
 
         // Selecting the tab fires ViewSelector_SelectionChanged → RebuildList.
         ViewSelector.SelectedItem = ActiveTab;
+
+        _dayChanges.DayChanged += OnDayChanged;
+        ActualThemeChanged += OnThemeChanged;
+        Unloaded += (_, _) =>
+        {
+            _dayChanges.DayChanged -= OnDayChanged;
+            ActualThemeChanged -= OnThemeChanged;
+        };
     }
+
+    private void OnDayChanged() => RebuildList();
+
+    private void OnThemeChanged(FrameworkElement sender, object args) => RebuildList();
 
     private void ViewSelector_SelectionChanged(
         SelectorBar sender, SelectorBarSelectionChangedEventArgs args)

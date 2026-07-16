@@ -1,4 +1,5 @@
 using Caffeine.Core.Awake;
+using Caffeine.Core.Common;
 using Caffeine.Core.Habits;
 using Caffeine.Core.Todos;
 using Microsoft.UI.Xaml;
@@ -14,6 +15,7 @@ public sealed partial class HomePage : Page
     private readonly TimersService _timers;
     private readonly TodoService _todos;
     private readonly HabitService _habits;
+    private readonly DayChangeWatcher _dayChanges;
     private bool _updatingToggle;
 
     public HomePage()
@@ -23,14 +25,19 @@ public sealed partial class HomePage : Page
         _timers = app.Timers;
         _todos = app.Todos;
         _habits = app.Habits;
+        _dayChanges = app.DayChanges;
         InitializeComponent();
 
         _state.Changed += OnStateChanged;
         _timers.Ticked += RefreshTimersCard;
+        _dayChanges.DayChanged += OnDayChanged;
+        ActualThemeChanged += OnThemeChanged;
         Unloaded += (_, _) =>
         {
             _state.Changed -= OnStateChanged;
             _timers.Ticked -= RefreshTimersCard;
+            _dayChanges.DayChanged -= OnDayChanged;
+            ActualThemeChanged -= OnThemeChanged;
         };
 
         OnStateChanged(_state.IsActive);
@@ -153,4 +160,18 @@ public sealed partial class HomePage : Page
 
     private void OpenHabits_Click(object sender, RoutedEventArgs e) =>
         ((App)Application.Current).NavigateTo("habits");
+
+    private void OnDayChanged()
+    {
+        RefreshTodosCard();
+        BuildHabitsCard(); // rebuilds checkboxes + refreshes the "N of M done today" caption
+    }
+
+    private void OnThemeChanged(FrameworkElement sender, object args)
+    {
+        // Home's cards are XAML with ThemeResource brushes and retint themselves;
+        // no code-built brushes here need manual retinting. Kept for symmetry with
+        // the module pages and to re-read anything day/theme-derived if added later.
+        BuildHabitsCard();
+    }
 }
