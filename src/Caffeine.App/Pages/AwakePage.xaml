@@ -52,9 +52,9 @@
                             CornerRadius="24"
                             Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                             Visibility="Collapsed" />
-                        <TextBlock
-                            Text="&#x2615;"
-                            FontSize="22"
+                        <FontIcon
+                            Glyph="&#xEC32;"
+                            FontSize="20"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center" />
                     </Grid>

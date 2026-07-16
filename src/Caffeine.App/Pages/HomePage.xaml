@@ -58,9 +58,9 @@
                             <Border
                                 CornerRadius="24"
                                 Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
-                            <TextBlock
-                                Text="&#x1F501;"
-                                FontSize="22"
+                            <FontIcon
+                                Glyph="&#xE72C;"
+                                FontSize="20"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center" />
                         </Grid>
@@ -95,9 +95,9 @@
                         <Border
                             CornerRadius="24"
                             Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
-                        <TextBlock
-                            Text="&#x2705;"
-                            FontSize="22"
+                        <FontIcon
+                            Glyph="&#xE9D5;"
+                            FontSize="20"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center" />
                     </Grid>
@@ -130,9 +130,9 @@
                         <Border
                             CornerRadius="24"
                             Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
-                        <TextBlock
-                            Text="&#x23F1;&#xFE0F;"
-                            FontSize="22"
+                        <FontIcon
+                            Glyph="&#xE916;"
+                            FontSize="20"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center" />
                     </Grid>
@@ -178,9 +178,9 @@
                             CornerRadius="24"
                             Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                             Visibility="Collapsed" />
-                        <TextBlock
-                            Text="&#x2615;"
-                            FontSize="22"
+                        <FontIcon
+                            Glyph="&#xEC32;"
+                            FontSize="20"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center" />
                     </Grid>
