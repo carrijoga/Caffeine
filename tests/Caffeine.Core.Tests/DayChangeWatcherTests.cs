@@ -8,12 +8,19 @@ public class DayChangeWatcherTests
     [Fact]
     public void Poll_DoesNotFire_WhenStillSameDay()
     {
-        var clock = new FakeClock(); // starts 2026-01-01 12:00 local
+        var clock = new FakeClock();
+
+        // Normalize to local noon so a few hours' advance can't cross local
+        // midnight on any machine timezone (FakeClock is UTC-anchored; the
+        // watcher uses the machine's local date).
+        DateTime local = clock.UtcNow.LocalDateTime;
+        clock.Advance(local.Date.AddHours(12) - local);
+
         var watcher = new DayChangeWatcher(clock);
         int fired = 0;
         watcher.DayChanged += () => fired++;
 
-        clock.Advance(TimeSpan.FromHours(2)); // same calendar day
+        clock.Advance(TimeSpan.FromHours(2)); // still the same local day (noon -> 2pm)
         watcher.Poll();
 
         Assert.Equal(0, fired);
