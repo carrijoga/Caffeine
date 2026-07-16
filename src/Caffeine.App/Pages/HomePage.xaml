@@ -40,6 +40,45 @@
                 TextWrapping="Wrap"
                 Margin="0,0,0,20" />
 
+            <!-- Habits module card: whole card navigates to the Habits page;
+                 the checkboxes check off today without navigating. -->
+            <Button
+                Style="{StaticResource HubCardButtonStyle}"
+                Click="OpenHabits_Click"
+                AutomationProperties.Name="Open Habits"
+                Margin="0,0,0,4">
+                <StackPanel Spacing="10">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Width="48" Height="48" VerticalAlignment="Center">
+                            <Border
+                                CornerRadius="24"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                            <TextBlock
+                                Text="&#x1F501;"
+                                FontSize="22"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Grid>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="Habits" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <TextBlock
+                                x:Name="HabitsCaption"
+                                Text="No habits yet"
+                                Style="{StaticResource HubCaptionStyle}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel x:Name="HomeHabitRows" Spacing="2" />
+                </StackPanel>
+            </Button>
+
             <!-- Todos module card: whole card navigates to the Todos page. -->
             <Button
                 Style="{StaticResource HubCardButtonStyle}"
@@ -168,7 +207,7 @@
                 </Grid>
             </Button>
 
-            <!-- Stage 4 adds the Habits card above the Todos card. -->
+            <!-- All four module cards are in place: Habits, Todos, Timers, Awake. -->
         </StackPanel>
     </ScrollViewer>
 </Page>
