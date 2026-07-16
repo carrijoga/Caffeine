@@ -9,4 +9,7 @@ internal sealed class FakeClock : IClock
         new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     public void Advance(TimeSpan by) => UtcNow += by;
+
+    public void SetTo(DateOnly date) =>
+        UtcNow = new DateTimeOffset(date.ToDateTime(new TimeOnly(12, 0)), DateTimeOffset.Now.Offset).ToUniversalTime();
 }

@@ -311,4 +311,90 @@ public class HabitServiceTests : IDisposable
         var second = CreateService();
         Assert.Equal(Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday, second.Habits.Single().Repeat);
     }
+
+    [Fact]
+    public void CurrentStreak_NonDaily_SkipsUnscheduledDays_WithoutBreakingStreak()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+        service.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        var tue = new DateOnly(2026, 7, 21);
+        var thu = new DateOnly(2026, 7, 23);
+        var sat = new DateOnly(2026, 7, 25);
+
+        service.SetDone(habit.Id, tue, true);
+        service.SetDone(habit.Id, thu, true);
+        service.SetDone(habit.Id, sat, true);
+
+        // "Today" is Saturday: walk service's clock there via FakeClock.
+        _clock.SetTo(sat);
+
+        Assert.Equal(3, service.CurrentStreak(habit));
+    }
+
+    [Fact]
+    public void CurrentStreak_NonDaily_MissedScheduledDay_ZeroesStreak()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+        service.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        var tue = new DateOnly(2026, 7, 21);
+        var sat = new DateOnly(2026, 7, 25);
+        // Thursday (7/23) deliberately left undone.
+
+        service.SetDone(habit.Id, tue, true);
+        _clock.SetTo(sat);
+
+        Assert.Equal(0, service.CurrentStreak(habit)); // Thursday was scheduled and missed, breaking the run
+    }
+
+    [Fact]
+    public void BestStreak_NonDaily_CountsOnlyScheduledOccurrences()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+        service.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        var tue = new DateOnly(2026, 7, 21);
+        var thu = new DateOnly(2026, 7, 23);
+        var sat = new DateOnly(2026, 7, 25);
+
+        service.SetDone(habit.Id, tue, true);
+        service.SetDone(habit.Id, thu, true);
+        service.SetDone(habit.Id, sat, true);
+
+        Assert.Equal(3, service.BestStreak(habit));
+    }
+
+    [Fact]
+    public void LastSevenDays_NonDaily_ReturnsLastSevenScheduledDates()
+    {
+        var service = CreateService();
+        Habit habit = service.Add("trash")!;
+        service.SetRepeat(habit.Id, Weekdays.Tuesday | Weekdays.Thursday | Weekdays.Saturday);
+
+        var sat = new DateOnly(2026, 7, 25);
+        _clock.SetTo(sat);
+        service.SetDone(habit.Id, sat, true); // only today (the 7th scheduled slot back) is done
+
+        IReadOnlyList<bool> days = service.LastSevenDays(habit);
+
+        Assert.Equal(7, days.Count);
+        Assert.True(days[6]);  // today (Sat 7/25) — done
+        Assert.False(days[5]); // Thu 7/23 — not done
+        Assert.False(days[0]); // the oldest of the 7 scheduled dates back — not done
+    }
+
+    [Fact]
+    public void CurrentStreak_Daily_UnchangedFromBeforeThisFeature()
+    {
+        // Regression guard: Weekdays.All must reproduce the exact prior calendar-day behavior.
+        var service = CreateService();
+        Habit habit = service.Add("read")!;
+        MarkDays(service, habit.Id, service.Today.AddDays(-2), 3);
+
+        Assert.Equal(3, service.CurrentStreak(habit));
+    }
 }
