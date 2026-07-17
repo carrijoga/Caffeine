@@ -212,14 +212,23 @@ public sealed partial class HabitsPage : Page
     {
         var box = new TextBox { Text = habit.Name, MinWidth = 220 };
         AutomationProperties.SetName(box, "New name");
+
         var save = new Button
         {
             Content = "Save",
             Style = (Style)Application.Current.Resources["AccentButtonStyle"],
             Margin = new Thickness(0, 8, 0, 0),
         };
-        var panel = new StackPanel();
+
+        Func<Weekdays>? getRepeat = null;
+        StackPanel picker = WeekdayPicker.Build(
+            habit.Repeat,
+            out getRepeat,
+            onChanged: () => save.IsEnabled = getRepeat!() != Weekdays.None);
+
+        var panel = new StackPanel { Spacing = 8 };
         panel.Children.Add(box);
+        panel.Children.Add(picker);
         panel.Children.Add(save);
 
         var flyout = new Flyout { Content = panel };
@@ -227,6 +236,7 @@ public sealed partial class HabitsPage : Page
         void Commit()
         {
             _habits.Rename(habit.Id, box.Text);
+            _habits.SetRepeat(habit.Id, getRepeat());
             flyout.Hide();
             RebuildList();
         }
