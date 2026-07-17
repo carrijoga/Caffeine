@@ -40,7 +40,9 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]"
           git tag "v${{ steps.bump.outputs.version }}"
           git push origin HEAD:master
+          if ($LASTEXITCODE -ne 0) { throw "git push to master failed." }
           git push origin "v${{ steps.bump.outputs.version }}"
+          if ($LASTEXITCODE -ne 0) { throw "git push of tag failed." }
 
       - name: Build MSIX
         shell: pwsh
