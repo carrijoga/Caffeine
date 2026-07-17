@@ -108,6 +108,9 @@ public sealed partial class HabitsPage : Page
         }
 
         EmptyText.Visibility = today.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = _habits.Habits.Count == 0
+            ? "No habits yet — add your first above."
+            : "No habits today.";
     }
 
     private Border BuildRow(Habit habit)
