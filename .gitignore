@@ -3,3 +3,8 @@ obj/
 *.user
 .vs/
 docs/superpowers
+
+# MSIX signing artifacts / build output
+*.pfx
+build/AppPackages/
+src/Caffeine.App/AppPackages/
