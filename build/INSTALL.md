@@ -4,36 +4,44 @@ Caffeine ships as a signed **MSIX** package. Because it's signed with a
 **self-signed** certificate (fine for personal use), each machine must trust
 that certificate once before Windows will install the app.
 
+## Get the package
+
+Every push to `master` automatically builds, signs, and publishes a new
+release. Go to the repo's **[Releases page](../../releases)** and download,
+from the latest release:
+
+- `Caffeine.App_<version>_x64.msix`
+- `CaffeineDev.cer` (only needed the first time you set up a machine)
+
 ## First-time machine setup (once per PC)
 
 1. **Trust the certificate.** In an **elevated** PowerShell (Run as
-   administrator), from the repo root:
+   administrator), from wherever you downloaded `CaffeineDev.cer`:
 
    ```powershell
-   Import-Certificate -FilePath build\CaffeineDev.cer `
+   Import-Certificate -FilePath CaffeineDev.cer `
        -CertStoreLocation Cert:\LocalMachine\TrustedPeople
    ```
 
-   (Or double-click `build\CaffeineDev.cer` → **Install Certificate** →
+   (Or double-click `CaffeineDev.cer` → **Install Certificate** →
    **Local Machine** → **Place all certificates in the following store** →
    **Trusted People**.)
 
 ## Install the app
 
-Double-click the `.msix` and click **Install**, or from PowerShell:
+Double-click the downloaded `.msix` and click **Install**, or from
+PowerShell:
 
 ```powershell
-Add-AppxPackage -Path `
-  src\Caffeine.App\AppPackages\Caffeine.App_1.0.0.0_x64_Test\Caffeine.App_1.0.0.0_x64.msix
+Add-AppxPackage -Path .\Caffeine.App_<version>_x64.msix
 ```
 
 Caffeine then appears in the Start Menu like any installed app.
 
 ## Updating
 
-Bump `Version` in `src\Caffeine.App\Package.appxmanifest` (e.g. `1.0.1.0`),
-re-run the packaging script, then `Add-AppxPackage` the new `.msix` — it
-upgrades in place. No need to re-trust the certificate.
+Download the newer `.msix` from the Releases page and `Add-AppxPackage` it —
+it upgrades in place. No need to re-trust the certificate.
 
 ## Uninstalling
 
@@ -45,7 +53,10 @@ Get-AppxPackage -Name Caffeine.App | Remove-AppxPackage
 
 ---
 
-## Rebuilding the package
+## Building it yourself (local development)
+
+If you're working on Caffeine and want a local build instead of downloading
+a release:
 
 ```powershell
 # One-time, per dev machine (the .pfx is gitignored):
