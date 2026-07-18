@@ -72,6 +72,34 @@ public sealed class HabitService
         }
     }
 
+    /// <summary>True when <paramref name="habit"/> is scheduled to run on <paramref name="date"/>'s day of week.</summary>
+    public bool IsScheduled(Habit habit, DateOnly date) => habit.Repeat.HasFlag(ToWeekdayFlag(date.DayOfWeek));
+
+    /// <summary>Updates which days of the week the habit repeats on.</summary>
+    public void SetRepeat(Guid id, Weekdays repeat)
+    {
+        Habit? habit = _list.Items.FirstOrDefault(h => h.Id == id);
+        if (habit is null || habit.Repeat == repeat)
+        {
+            return;
+        }
+
+        habit.Repeat = repeat;
+        _store.Save(_list);
+    }
+
+    private static Weekdays ToWeekdayFlag(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Sunday => Weekdays.Sunday,
+        DayOfWeek.Monday => Weekdays.Monday,
+        DayOfWeek.Tuesday => Weekdays.Tuesday,
+        DayOfWeek.Wednesday => Weekdays.Wednesday,
+        DayOfWeek.Thursday => Weekdays.Thursday,
+        DayOfWeek.Friday => Weekdays.Friday,
+        DayOfWeek.Saturday => Weekdays.Saturday,
+        _ => Weekdays.None,
+    };
+
     public bool IsDone(Habit habit, DateOnly date) => habit.CompletedOn.Contains(date);
 
     public void SetDone(Guid id, DateOnly date, bool done)
@@ -89,45 +117,96 @@ public sealed class HabitService
         }
     }
 
-    /// <summary>Consecutive days ending today or yesterday; 0 when neither day is completed.</summary>
+    /// <summary>Consecutive scheduled occurrences ending today or yesterday; 0 when the most recent scheduled occurrence was missed.</summary>
     public int CurrentStreak(Habit habit)
     {
-        DateOnly day = habit.CompletedOn.Contains(Today) ? Today : Today.AddDays(-1);
+        DateOnly day = IsScheduled(habit, Today) && habit.CompletedOn.Contains(Today)
+            ? Today
+            : Today.AddDays(-1);
+
         int streak = 0;
-        while (habit.CompletedOn.Contains(day))
+        int safety = 0;
+        while (safety < 3650) // safety bound: if nothing is scheduled (Repeat == None), never loop forever
         {
-            streak++;
+            if (IsScheduled(habit, day))
+            {
+                if (!habit.CompletedOn.Contains(day))
+                {
+                    break;
+                }
+
+                streak++;
+            }
+
             day = day.AddDays(-1);
+            safety++;
         }
 
         return streak;
     }
 
-    /// <summary>Longest consecutive run anywhere in the completion log.</summary>
+    /// <summary>Longest consecutive run of scheduled occurrences anywhere in the completion log.</summary>
     public int BestStreak(Habit habit)
     {
         int best = 0;
         int run = 0;
-        DateOnly previous = default;
+        DateOnly? previousScheduled = null;
         foreach (DateOnly date in habit.CompletedOn.Order())
         {
-            run = run > 0 && date == previous.AddDays(1) ? run + 1 : 1;
+            if (!IsScheduled(habit, date))
+            {
+                continue;
+            }
+
+            bool isNextScheduledAfterPrevious = previousScheduled is { } prev && IsImmediatelyNextScheduled(habit, prev, date);
+            run = run > 0 && isNextScheduledAfterPrevious ? run + 1 : 1;
             best = Math.Max(best, run);
-            previous = date;
+            previousScheduled = date;
         }
 
         return best;
     }
 
-    /// <summary>Completion flags for the last 7 days, oldest first; index 6 is today.</summary>
-    public IReadOnlyList<bool> LastSevenDays(Habit habit)
+    /// <summary>True when <paramref name="candidate"/> is the next scheduled date strictly after <paramref name="previous"/>, with no scheduled date in between.</summary>
+    private bool IsImmediatelyNextScheduled(Habit habit, DateOnly previous, DateOnly candidate)
     {
-        var days = new bool[7];
-        for (int i = 0; i < 7; i++)
+        for (DateOnly day = previous.AddDays(1); day < candidate; day = day.AddDays(1))
         {
-            days[i] = habit.CompletedOn.Contains(Today.AddDays(i - 6));
+            if (IsScheduled(habit, day))
+            {
+                return false; // a scheduled date was missed between previous and candidate
+            }
         }
 
-        return days;
+        return true;
+    }
+
+    /// <summary>Completion flags for the last 7 scheduled dates on/before today, oldest first; index 6 is the most recent scheduled date.</summary>
+    public IReadOnlyList<bool> LastSevenDays(Habit habit)
+    {
+        var results = new List<bool>(7);
+        DateOnly day = Today;
+        int safety = 0;
+        while (results.Count < 7 && safety < 3650)
+        {
+            if (IsScheduled(habit, day))
+            {
+                results.Add(habit.CompletedOn.Contains(day));
+            }
+
+            day = day.AddDays(-1);
+            safety++;
+        }
+
+        results.Reverse();
+
+        // Pad with false at the front if fewer than 7 scheduled dates exist in the lookback window
+        // (e.g. a brand-new once-a-week habit) so callers can always index 0..6 safely.
+        while (results.Count < 7)
+        {
+            results.Insert(0, false);
+        }
+
+        return results;
     }
 }

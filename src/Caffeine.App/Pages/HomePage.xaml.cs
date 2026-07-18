@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System.Linq;
 
 namespace Caffeine.Pages;
 
@@ -124,7 +125,7 @@ public sealed partial class HomePage : Page
     private void BuildHabitsCard()
     {
         HomeHabitRows.Children.Clear();
-        foreach (Habit habit in _habits.Habits)
+        foreach (Habit habit in _habits.Habits.Where(h => _habits.IsScheduled(h, _habits.Today)))
         {
             var check = new CheckBox
             {
@@ -152,10 +153,10 @@ public sealed partial class HomePage : Page
 
     private void RefreshHabitsCaption()
     {
-        int total = _habits.Habits.Count;
-        HabitsCaption.Text = total == 0
-            ? "No habits yet"
-            : $"{_habits.Habits.Count(h => _habits.IsDone(h, _habits.Today))} of {total} done today";
+        List<Habit> today = _habits.Habits.Where(h => _habits.IsScheduled(h, _habits.Today)).ToList();
+        HabitsCaption.Text = today.Count == 0
+            ? "No habits today"
+            : $"{today.Count(h => _habits.IsDone(h, _habits.Today))} of {today.Count} done today";
     }
 
     private void OpenHabits_Click(object sender, RoutedEventArgs e) =>

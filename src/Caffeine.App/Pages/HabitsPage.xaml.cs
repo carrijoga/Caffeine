@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
+using System.Linq;
 using Windows.System;
 
 namespace Caffeine.Pages;
@@ -39,19 +40,57 @@ public sealed partial class HabitsPage : Page
     {
         if (e.Key == VirtualKey.Enter)
         {
-            AddHabit();
+            _ = ShowAddDialogAsync();
             e.Handled = true;
         }
     }
 
-    private void Add_Click(object sender, RoutedEventArgs e) => AddHabit();
+    private void Add_Click(object sender, RoutedEventArgs e) => _ = ShowAddDialogAsync();
 
-    private void AddHabit()
+    /// <summary>Opens the add dialog pre-filled from the inline name/icon boxes, with a day picker defaulting to every day.</summary>
+    private async Task ShowAddDialogAsync()
     {
-        if (_habits.Add(NewNameBox.Text, NewIconBox.Text) is null)
+        string initialName = NewNameBox.Text;
+        string initialIcon = NewIconBox.Text;
+
+        var nameBox = new TextBox { Text = initialName, PlaceholderText = "Habit name" };
+        AutomationProperties.SetName(nameBox, "Habit name");
+        var iconBox = new TextBox { Text = initialIcon, Width = 64, MaxLength = 8, PlaceholderText = "⭐" };
+        AutomationProperties.SetName(iconBox, "Icon");
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Add habit",
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        Func<Weekdays>? getRepeat = null;
+        StackPanel picker = WeekdayPicker.Build(
+            Weekdays.All,
+            out getRepeat,
+            onChanged: () => dialog.IsPrimaryButtonEnabled = getRepeat!() != Weekdays.None);
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(nameBox);
+        content.Children.Add(iconBox);
+        content.Children.Add(picker);
+        dialog.Content = content;
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        Habit? habit = _habits.Add(nameBox.Text, iconBox.Text);
+        if (habit is null)
         {
             return; // whitespace-only name — nothing to add
         }
+
+        _habits.SetRepeat(habit.Id, getRepeat());
 
         NewNameBox.Text = string.Empty;
         NewIconBox.Text = string.Empty;
@@ -62,12 +101,16 @@ public sealed partial class HabitsPage : Page
     private void RebuildList()
     {
         HabitRows.Children.Clear();
-        foreach (Habit habit in _habits.Habits)
+        List<Habit> today = _habits.Habits.Where(h => _habits.IsScheduled(h, _habits.Today)).ToList();
+        foreach (Habit habit in today)
         {
             HabitRows.Children.Add(BuildRow(habit));
         }
 
-        EmptyText.Visibility = _habits.Habits.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Visibility = today.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = _habits.Habits.Count == 0
+            ? "No habits yet — add your first above."
+            : "No habits today.";
     }
 
     private Border BuildRow(Habit habit)
@@ -172,14 +215,23 @@ public sealed partial class HabitsPage : Page
     {
         var box = new TextBox { Text = habit.Name, MinWidth = 220 };
         AutomationProperties.SetName(box, "New name");
+
         var save = new Button
         {
             Content = "Save",
             Style = (Style)Application.Current.Resources["AccentButtonStyle"],
             Margin = new Thickness(0, 8, 0, 0),
         };
-        var panel = new StackPanel();
+
+        Func<Weekdays>? getRepeat = null;
+        StackPanel picker = WeekdayPicker.Build(
+            habit.Repeat,
+            out getRepeat,
+            onChanged: () => save.IsEnabled = getRepeat!() != Weekdays.None);
+
+        var panel = new StackPanel { Spacing = 8 };
         panel.Children.Add(box);
+        panel.Children.Add(picker);
         panel.Children.Add(save);
 
         var flyout = new Flyout { Content = panel };
@@ -187,6 +239,7 @@ public sealed partial class HabitsPage : Page
         void Commit()
         {
             _habits.Rename(habit.Id, box.Text);
+            _habits.SetRepeat(habit.Id, getRepeat());
             flyout.Hide();
             RebuildList();
         }
