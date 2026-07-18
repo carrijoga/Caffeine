@@ -49,6 +49,7 @@ jobs:
         run: |
           dotnet build src/Caffeine.App/Caffeine.App.csproj `
             -c Release -p:Platform=x64 -p:GenerateAppxPackageOnBuild=true
+          if ($LASTEXITCODE -ne 0) { throw "Build failed." }
 
       - name: Decode signing certificate
         shell: pwsh
