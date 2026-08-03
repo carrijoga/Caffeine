@@ -21,6 +21,7 @@ public sealed partial class HabitsPage : Page
         _habits = ((App)Application.Current).Habits;
         _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
+        NewIconPickerHost.Content = EmojiPicker.Build(emoji => NewIconBox.Text = emoji);
         RebuildList();
 
         _dayChanges.DayChanged += OnDayChanged;
@@ -57,6 +58,10 @@ public sealed partial class HabitsPage : Page
         AutomationProperties.SetName(nameBox, "Habit name");
         var iconBox = new TextBox { Text = initialIcon, Width = 64, MaxLength = 8, PlaceholderText = "⭐" };
         AutomationProperties.SetName(iconBox, "Icon");
+        Button iconPicker = EmojiPicker.Build(emoji => iconBox.Text = emoji);
+        var iconRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        iconRow.Children.Add(iconBox);
+        iconRow.Children.Add(iconPicker);
 
         var dialog = new ContentDialog
         {
@@ -75,7 +80,7 @@ public sealed partial class HabitsPage : Page
 
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(nameBox);
-        content.Children.Add(iconBox);
+        content.Children.Add(iconRow);
         content.Children.Add(picker);
         dialog.Content = content;
 
