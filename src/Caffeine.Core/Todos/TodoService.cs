@@ -49,7 +49,7 @@ public sealed class TodoService
         !item.IsDone && item.DueDate == Today;
 
     /// <summary>Adds a to-do; whitespace-only titles are ignored. Returns the new item, or null when ignored.</summary>
-    public TodoItem? Add(string title, DateOnly? dueDate = null)
+    public TodoItem? Add(string title, DateOnly? dueDate = null, Guid? categoryId = null)
     {
         string trimmed = title.Trim();
         if (trimmed.Length == 0)
@@ -61,6 +61,7 @@ public sealed class TodoService
         {
             Title = trimmed,
             DueDate = dueDate,
+            CategoryId = categoryId,
             CreatedAt = _clock.UtcNow,
         };
         _list.Items.Add(item);
