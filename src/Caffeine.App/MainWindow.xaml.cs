@@ -56,7 +56,11 @@ public sealed partial class MainWindow : Window
         Activate();
     }
 
-    public void AllowClose() => _allowClose = true;
+    public void AllowClose()
+    {
+        _allowClose = true;
+        Close();
+    }
 
     private void NavView_SelectionChanged(
         NavigationView sender, NavigationViewSelectionChangedEventArgs args)

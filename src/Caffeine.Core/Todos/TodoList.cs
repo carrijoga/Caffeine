@@ -4,4 +4,6 @@ namespace Caffeine.Core.Todos;
 public sealed class TodoList
 {
     public List<TodoItem> Items { get; set; } = new();
+
+    public List<TodoCategory> Categories { get; set; } = new();
 }

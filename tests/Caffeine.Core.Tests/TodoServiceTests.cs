@@ -183,4 +183,27 @@ public class TodoServiceTests : IDisposable
         TodoItem completed = Assert.Single(second.Completed);
         Assert.Equal(done.Id, completed.Id);
     }
+
+    [Fact]
+    public void Load_LegacyJsonWithoutCategoryFields_DefaultsToUncategorized()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "caffeine-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        string legacyJson = """
+            {
+              "Items": [
+                { "Id": "11111111-1111-1111-1111-111111111111", "Title": "old item", "DueDate": null, "IsDone": false, "CreatedAt": "2026-01-01T00:00:00+00:00", "CompletedAt": null }
+              ]
+            }
+            """;
+        File.WriteAllText(Path.Combine(dir, "todos.json"), legacyJson);
+
+        var service = new TodoService(_clock, new JsonStore<TodoList>("todos.json", dir));
+
+        TodoItem loaded = Assert.Single(service.Active);
+        Assert.Null(loaded.CategoryId);
+        Assert.Empty(service.Categories);
+
+        Directory.Delete(dir, recursive: true);
+    }
 }

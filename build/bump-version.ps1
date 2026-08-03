@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Bumps the patch component of the MSIX package version in Package.appxmanifest.
 
