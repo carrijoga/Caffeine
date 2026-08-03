@@ -49,7 +49,7 @@ public sealed class TodoService
         !item.IsDone && item.DueDate == Today;
 
     /// <summary>Adds a to-do; whitespace-only titles are ignored. Returns the new item, or null when ignored.</summary>
-    public TodoItem? Add(string title, DateOnly? dueDate = null)
+    public TodoItem? Add(string title, DateOnly? dueDate = null, Guid? categoryId = null)
     {
         string trimmed = title.Trim();
         if (trimmed.Length == 0)
@@ -61,6 +61,7 @@ public sealed class TodoService
         {
             Title = trimmed,
             DueDate = dueDate,
+            CategoryId = categoryId,
             CreatedAt = _clock.UtcNow,
         };
         _list.Items.Add(item);
@@ -87,5 +88,64 @@ public sealed class TodoService
         {
             _store.Save(_list);
         }
+    }
+
+    /// <summary>Creates a category; whitespace-only names are ignored. Returns the new category, or null when ignored.</summary>
+    public TodoCategory? AddCategory(string name, string colorHex)
+    {
+        string trimmed = name.Trim();
+        if (trimmed.Length == 0)
+        {
+            return null;
+        }
+
+        var category = new TodoCategory { Name = trimmed, ColorHex = colorHex };
+        _list.Categories.Add(category);
+        _store.Save(_list);
+        return category;
+    }
+
+    /// <summary>No-ops on unknown id or an unchanged (name, colorHex) pair.</summary>
+    public void RenameCategory(Guid id, string name, string colorHex)
+    {
+        TodoCategory? category = _list.Categories.FirstOrDefault(c => c.Id == id);
+        string trimmed = name.Trim();
+        if (category is null || (category.Name == trimmed && category.ColorHex == colorHex))
+        {
+            return;
+        }
+
+        category.Name = trimmed;
+        category.ColorHex = colorHex;
+        _store.Save(_list);
+    }
+
+    /// <summary>Removes the category and every TodoItem assigned to it. No-ops on unknown id.</summary>
+    public void DeleteCategory(Guid id)
+    {
+        if (_list.Categories.RemoveAll(c => c.Id == id) == 0)
+        {
+            return;
+        }
+
+        _list.Items.RemoveAll(i => i.CategoryId == id);
+        _store.Save(_list);
+    }
+
+    /// <summary>Number of to-dos currently assigned to a category.</summary>
+    public int CountByCategory(Guid categoryId) =>
+        _list.Items.Count(i => i.CategoryId == categoryId);
+
+    /// <summary>Assigns or clears (categoryId: null) a to-do's category. No-ops on unknown todo id or an unchanged value.</summary>
+    public void SetCategory(Guid todoId, Guid? categoryId)
+    {
+        TodoItem? item = _list.Items.FirstOrDefault(i => i.Id == todoId);
+        if (item is null || item.CategoryId == categoryId)
+        {
+            return;
+        }
+
+        item.CategoryId = categoryId;
+        _store.Save(_list);
     }
 }

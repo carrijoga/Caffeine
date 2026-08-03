@@ -206,4 +206,149 @@ public class TodoServiceTests : IDisposable
 
         Directory.Delete(dir, recursive: true);
     }
+
+    [Fact]
+    public void AddCategory_TrimsName_AndStores()
+    {
+        var service = CreateService();
+
+        TodoCategory? category = service.AddCategory("  Work  ", "#FF0000");
+
+        Assert.NotNull(category);
+        Assert.Equal("Work", category.Name);
+        Assert.Equal("#FF0000", category.ColorHex);
+        Assert.Contains(category, service.Categories);
+    }
+
+    [Fact]
+    public void AddCategory_WhitespaceName_IsIgnored()
+    {
+        var service = CreateService();
+
+        Assert.Null(service.AddCategory("   ", "#FF0000"));
+        Assert.Empty(service.Categories);
+    }
+
+    [Fact]
+    public void RenameCategory_UpdatesNameAndColor()
+    {
+        var service = CreateService();
+        TodoCategory category = service.AddCategory("Work", "#FF0000")!;
+
+        service.RenameCategory(category.Id, "Personal", "#00FF00");
+
+        TodoCategory updated = Assert.Single(service.Categories);
+        Assert.Equal("Personal", updated.Name);
+        Assert.Equal("#00FF00", updated.ColorHex);
+    }
+
+    [Fact]
+    public void RenameCategory_UnknownId_NoOps()
+    {
+        var service = CreateService();
+        service.AddCategory("Work", "#FF0000");
+
+        service.RenameCategory(Guid.NewGuid(), "Nope", "#000000");
+
+        TodoCategory unchanged = Assert.Single(service.Categories);
+        Assert.Equal("Work", unchanged.Name);
+    }
+
+    [Fact]
+    public void CountByCategory_CountsAssignedTodos()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoItem a = service.Add("task a")!;
+        TodoItem b = service.Add("task b")!;
+        service.SetCategory(a.Id, work.Id);
+        service.SetCategory(b.Id, work.Id);
+
+        Assert.Equal(2, service.CountByCategory(work.Id));
+        Assert.Equal(0, service.CountByCategory(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void DeleteCategory_RemovesCategory_AndCascadesToAssignedTodos()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoCategory personal = service.AddCategory("Personal", "#00FF00")!;
+        TodoItem workItem = service.Add("work task")!;
+        TodoItem personalItem = service.Add("personal task")!;
+        TodoItem unassigned = service.Add("no category")!;
+        service.SetCategory(workItem.Id, work.Id);
+        service.SetCategory(personalItem.Id, personal.Id);
+
+        service.DeleteCategory(work.Id);
+
+        Assert.DoesNotContain(service.Categories, c => c.Id == work.Id);
+        Assert.Contains(service.Categories, c => c.Id == personal.Id);
+        Assert.DoesNotContain(service.Active, i => i.Id == workItem.Id);
+        Assert.Contains(service.Active, i => i.Id == personalItem.Id);
+        Assert.Contains(service.Active, i => i.Id == unassigned.Id);
+    }
+
+    [Fact]
+    public void DeleteCategory_UnknownId_NoOps()
+    {
+        var service = CreateService();
+        service.AddCategory("Work", "#FF0000");
+
+        service.DeleteCategory(Guid.NewGuid());
+
+        Assert.Single(service.Categories);
+    }
+
+    [Fact]
+    public void SetCategory_AssignsAndClears()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoItem item = service.Add("task")!;
+
+        service.SetCategory(item.Id, work.Id);
+        Assert.Equal(work.Id, service.Active.Single().CategoryId);
+
+        service.SetCategory(item.Id, null);
+        Assert.Null(service.Active.Single().CategoryId);
+    }
+
+    [Fact]
+    public void SetCategory_UnknownTodoId_NoOps()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+
+        service.SetCategory(Guid.NewGuid(), work.Id);
+
+        Assert.Empty(service.Active);
+    }
+
+    [Fact]
+    public void Add_WithCategoryId_AssignsCategory()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+
+        TodoItem item = service.Add("task", categoryId: work.Id)!;
+
+        Assert.Equal(work.Id, item.CategoryId);
+    }
+
+    [Fact]
+    public void CategoryAndCategoryAssignment_PersistAcrossReload()
+    {
+        var first = CreateService();
+        TodoCategory work = first.AddCategory("Work", "#FF0000")!;
+        TodoItem item = first.Add("task", categoryId: work.Id)!;
+
+        var second = CreateService();
+
+        TodoCategory reloadedCategory = Assert.Single(second.Categories);
+        Assert.Equal("Work", reloadedCategory.Name);
+        Assert.Equal("#FF0000", reloadedCategory.ColorHex);
+        TodoItem reloadedItem = Assert.Single(second.Active);
+        Assert.Equal(work.Id, reloadedItem.CategoryId);
+    }
 }
