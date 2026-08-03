@@ -63,6 +63,222 @@ public sealed partial class TodosPage : Page
 
     private void Add_Click(object sender, RoutedEventArgs e) => AddTodo();
 
+    private void ManageCategoriesButton_Click(object sender, RoutedEventArgs e) =>
+        _ = ShowManageCategoriesDialogAsync();
+
+    private async Task ShowManageCategoriesDialogAsync()
+    {
+        var list = new StackPanel { Spacing = 8 };
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Manage categories",
+            CloseButtonText = "Done",
+        };
+
+        // WinUI only allows one ContentDialog open at a time, so "+ New category" and the
+        // per-row delete confirmation (both ContentDialogs) can't be shown while this one is
+        // still up. Each nested flow hides this dialog first (resolving whichever ShowAsync()
+        // call is currently pending with None), fully awaits the nested dialog to close, and
+        // only then calls ShowAsync() on this same instance again itself to reopen — so at most
+        // one ShowAsync() for `dialog` is ever in flight. isClosingForNestedDialog distinguishes
+        // a Hide() done for this reason from the user genuinely closing via "Done": it's set
+        // synchronously right before Hide() (so the resolution this triggers is never treated as
+        // a real close by ShowOnceAsync) and cleared once the nested flow reopens `dialog`.
+        bool isClosingForNestedDialog = false;
+
+        // Shows `dialog` once and, if that resolution was a real close (not a nested-dialog
+        // Hide()), runs the post-session refresh. Called both for the initial show and every
+        // reopen, so the refresh always runs on whichever ShowAsync() call is the final one.
+        async Task ShowOnceAsync()
+        {
+            await dialog.ShowAsync();
+            if (isClosingForNestedDialog)
+            {
+                return;
+            }
+
+            // Combos may be stale if edits/deletes happened without a full-dialog reopen path;
+            // refresh once more after the dialog closes and rebuild the visible list.
+            PopulateCategoryCombo();
+            RefreshCategoryFilterCombo();
+            RebuildList();
+        }
+
+        async Task HideForNestedDialogAsync(Func<Task> showNestedDialogAsync)
+        {
+            isClosingForNestedDialog = true;
+            dialog.Hide();
+            await showNestedDialogAsync();
+            isClosingForNestedDialog = false;
+            await ShowOnceAsync();
+        }
+
+        void RebuildCategoryList()
+        {
+            list.Children.Clear();
+            foreach (TodoCategory category in _todos.Categories)
+            {
+                list.Children.Add(BuildCategoryManageRow(category, HideForNestedDialogAsync, RebuildCategoryList));
+            }
+
+            if (_todos.Categories.Count == 0)
+            {
+                list.Children.Add(new TextBlock { Text = "No categories yet." });
+            }
+        }
+
+        RebuildCategoryList();
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(list);
+        dialog.Content = content;
+
+        var addButton = new Button { Content = "+ New category" };
+        addButton.Click += async (_, _) =>
+        {
+            await HideForNestedDialogAsync(async () =>
+            {
+                await ShowNewCategoryDialogAsync();
+                RebuildCategoryList();
+                PopulateCategoryCombo();
+                RefreshCategoryFilterCombo();
+            });
+        };
+        content.Children.Add(addButton);
+
+        await ShowOnceAsync();
+    }
+
+    private Border BuildCategoryManageRow(
+        TodoCategory category, Func<Func<Task>, Task> hideForNestedDialogAsync, Action onChanged)
+    {
+        var swatch = new Border
+        {
+            Background = new SolidColorBrush(HexColor.Parse(category.ColorHex)),
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(8),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var name = new TextBlock
+        {
+            Text = category.Name,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var edit = new Button
+        {
+            Content = new FontIcon { Glyph = "", FontSize = 14 },
+            Padding = new Thickness(8),
+            Flyout = BuildEditCategoryFlyout(category, onChanged),
+        };
+        AutomationProperties.SetName(edit, $"Edit {category.Name}");
+
+        var delete = new Button
+        {
+            Content = new FontIcon { Glyph = "", FontSize = 14 },
+            Padding = new Thickness(8),
+        };
+        AutomationProperties.SetName(delete, $"Delete {category.Name}");
+        delete.Click += async (_, _) =>
+        {
+            await hideForNestedDialogAsync(async () =>
+            {
+                await ConfirmDeleteCategoryAsync(category);
+                onChanged();
+            });
+        };
+
+        var grid = new Grid { ColumnSpacing = 8 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(name, 1);
+        Grid.SetColumn(edit, 2);
+        Grid.SetColumn(delete, 3);
+        grid.Children.Add(swatch);
+        grid.Children.Add(name);
+        grid.Children.Add(edit);
+        grid.Children.Add(delete);
+
+        return new Border { Child = grid, Padding = new Thickness(0, 4, 0, 4) };
+    }
+
+    private Flyout BuildEditCategoryFlyout(TodoCategory category, Action onChanged)
+    {
+        var nameBox = new TextBox { Text = category.Name, MinWidth = 200 };
+        AutomationProperties.SetName(nameBox, "Category name");
+
+        var save = new Button
+        {
+            Content = "Save",
+            Style = (Style)Application.Current.Resources["AccentButtonStyle"],
+            Margin = new Thickness(0, 8, 0, 0),
+        };
+
+        Func<string>? getColor = null;
+        StackPanel picker = CategoryColorPicker.Build(
+            category.ColorHex,
+            out getColor,
+            onChanged: () => { });
+
+        var panel = new StackPanel { Spacing = 8 };
+        panel.Children.Add(nameBox);
+        panel.Children.Add(picker);
+        panel.Children.Add(save);
+
+        var flyout = new Flyout { Content = panel };
+
+        void Commit()
+        {
+            _todos.RenameCategory(category.Id, nameBox.Text, getColor!());
+            flyout.Hide();
+            onChanged();
+        }
+
+        save.Click += (_, _) => Commit();
+        nameBox.KeyDown += (_, e) =>
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                Commit();
+                e.Handled = true;
+            }
+        };
+
+        return flyout;
+    }
+
+    /// <summary>Confirms before deleting; if to-dos are assigned, the body names the count and both are deleted together.</summary>
+    private async Task ConfirmDeleteCategoryAsync(TodoCategory category)
+    {
+        int count = _todos.CountByCategory(category.Id);
+        string body = count == 0
+            ? "This removes the category."
+            : $"This category has {count} to-do{(count == 1 ? "" : "s")}. " +
+              $"Deleting it will also delete all {count} to-do{(count == 1 ? "" : "s")}. This can't be undone.";
+        string primaryText = count == 0 ? "Delete" : "Delete category and to-dos";
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Delete \"{category.Name}\"?",
+            Content = body,
+            PrimaryButtonText = primaryText,
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            _todos.DeleteCategory(category.Id);
+        }
+    }
+
     private void PopulateCategoryCombo()
     {
         NewCategoryCombo.Items.Clear();
