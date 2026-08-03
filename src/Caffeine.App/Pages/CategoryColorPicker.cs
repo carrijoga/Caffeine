@@ -26,7 +26,7 @@ internal static class CategoryColorPicker
 
         foreach (string hex in CategoryColors.Palette)
         {
-            Color color = HexToColor(hex);
+            Color color = HexColor.Parse(hex);
             var toggle = new ToggleButton
             {
                 Background = new SolidColorBrush(color),
@@ -55,18 +55,21 @@ internal static class CategoryColorPicker
 
                 onChanged?.Invoke();
             };
+
+            toggle.Unchecked += (_, _) =>
+            {
+                // Swatches behave like a single-select group: re-check the toggle that was
+                // just unchecked so exactly one swatch remains selected at all times (e.g.
+                // when the user clicks the already-selected swatch).
+                if (toggles.All(t => t.Button.IsChecked != true))
+                {
+                    toggle.IsChecked = true;
+                }
+            };
         }
 
         getValue = () => toggles.First(t => t.Button.IsChecked == true).Hex;
 
         return panel;
-    }
-
-    private static Color HexToColor(string hex)
-    {
-        hex = hex.TrimStart('#');
-        return hex.Length == 6
-            ? Color.FromArgb(0xFF, byte.Parse(hex[..2], System.Globalization.NumberStyles.HexNumber), byte.Parse(hex[2..4], System.Globalization.NumberStyles.HexNumber), byte.Parse(hex[4..6], System.Globalization.NumberStyles.HexNumber))
-            : Color.FromArgb(0xFF, 0, 0, 0);
     }
 }
