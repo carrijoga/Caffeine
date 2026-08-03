@@ -17,7 +17,6 @@ public sealed partial class TodosPage : Page
     private readonly TodoService _todos;
     private readonly DayChangeWatcher _dayChanges;
     private bool _showCompleted;
-    private TodoCategory? _selectedNewCategory;
 
     public TodosPage()
     {
