@@ -23,10 +23,21 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock
-            Text="Todos"
-            Style="{StaticResource TitleTextBlockStyle}"
-            Margin="0,0,0,4" />
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Text="Todos"
+                Style="{StaticResource TitleTextBlockStyle}" />
+            <Button
+                Grid.Column="1"
+                x:Name="ManageCategoriesButton"
+                Content="Manage categories"
+                VerticalAlignment="Center"
+                Click="ManageCategoriesButton_Click" />
+        </Grid>
         <TextBlock
             Grid.Row="1"
             Text="One list. Get it out of your head."
@@ -40,6 +51,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox
                 x:Name="NewTitleBox"
@@ -50,22 +62,39 @@
                 Grid.Column="1"
                 PlaceholderText="Due date"
                 AutomationProperties.Name="Due date" />
-            <Button
+            <ComboBox
+                x:Name="NewCategoryCombo"
                 Grid.Column="2"
+                MinWidth="140"
+                PlaceholderText="Uncategorized"
+                SelectionChanged="NewCategoryCombo_SelectionChanged" />
+            <Button
+                Grid.Column="3"
                 x:Name="AddButton"
                 Content="Add"
                 Style="{StaticResource AccentButtonStyle}"
                 Click="Add_Click" />
         </Grid>
 
-        <SelectorBar
-            x:Name="ViewSelector"
-            Grid.Row="3"
-            Margin="0,0,0,12"
-            SelectionChanged="ViewSelector_SelectionChanged">
-            <SelectorBarItem x:Name="ActiveTab" Text="Active" />
-            <SelectorBarItem x:Name="CompletedTab" Text="Completed" />
-        </SelectorBar>
+        <Grid Grid.Row="3" ColumnSpacing="8" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <SelectorBar
+                x:Name="ViewSelector"
+                HorizontalAlignment="Left"
+                SelectionChanged="ViewSelector_SelectionChanged">
+                <SelectorBarItem x:Name="ActiveTab" Text="Active" />
+                <SelectorBarItem x:Name="CompletedTab" Text="Completed" />
+            </SelectorBar>
+            <ComboBox
+                x:Name="CategoryFilterCombo"
+                Grid.Column="1"
+                MinWidth="140"
+                PlaceholderText="Category: All"
+                SelectionChanged="CategoryFilterCombo_SelectionChanged" />
+        </Grid>
 
         <ScrollViewer Grid.Row="4">
             <StackPanel>
