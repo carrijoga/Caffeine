@@ -5,21 +5,26 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using System.Threading.Tasks;
 using Windows.System;
 
 namespace Caffeine.Pages;
 
 public sealed partial class TodosPage : Page
 {
+    private const string NewCategorySentinel = "__new_category__";
+
     private readonly TodoService _todos;
     private readonly DayChangeWatcher _dayChanges;
     private bool _showCompleted;
+    private TodoCategory? _selectedNewCategory;
 
     public TodosPage()
     {
         _todos = ((App)Application.Current).Todos;
         _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
+        PopulateCategoryCombo();
 
         // Selecting the tab fires ViewSelector_SelectionChanged → RebuildList.
         ViewSelector.SelectedItem = ActiveTab;
@@ -55,19 +60,99 @@ public sealed partial class TodosPage : Page
 
     private void Add_Click(object sender, RoutedEventArgs e) => AddTodo();
 
+    private void PopulateCategoryCombo()
+    {
+        NewCategoryCombo.Items.Clear();
+        NewCategoryCombo.Items.Add(new ComboBoxItem { Content = "Uncategorized", Tag = null });
+        foreach (TodoCategory category in _todos.Categories)
+        {
+            NewCategoryCombo.Items.Add(new ComboBoxItem { Content = category.Name, Tag = category.Id });
+        }
+
+        NewCategoryCombo.Items.Add(new ComboBoxItem { Content = "+ New category…", Tag = NewCategorySentinel });
+        NewCategoryCombo.SelectedIndex = 0;
+    }
+
+    private async void NewCategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (NewCategoryCombo.SelectedItem is not ComboBoxItem { Tag: NewCategorySentinel })
+        {
+            return;
+        }
+
+        TodoCategory? created = await ShowNewCategoryDialogAsync();
+        PopulateCategoryCombo();
+
+        if (created is not null)
+        {
+            SelectCategoryInCombo(created.Id);
+        }
+    }
+
+    private void SelectCategoryInCombo(Guid categoryId)
+    {
+        foreach (object obj in NewCategoryCombo.Items)
+        {
+            if (obj is ComboBoxItem { Tag: Guid tag } item && tag == categoryId)
+            {
+                NewCategoryCombo.SelectedItem = item;
+                return;
+            }
+        }
+    }
+
+    /// <summary>Shows the add-category dialog. Returns the created category, or null if cancelled/ignored.</summary>
+    private async Task<TodoCategory?> ShowNewCategoryDialogAsync()
+    {
+        var nameBox = new TextBox { PlaceholderText = "Category name" };
+        AutomationProperties.SetName(nameBox, "Category name");
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "New category",
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = false,
+        };
+
+        nameBox.TextChanged += (_, _) =>
+            dialog.IsPrimaryButtonEnabled = nameBox.Text.Trim().Length > 0;
+
+        Func<string>? getColor = null;
+        StackPanel picker = CategoryColorPicker.Build(
+            Core.Todos.CategoryColors.Palette[^1],
+            out getColor);
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(nameBox);
+        content.Children.Add(picker);
+        dialog.Content = content;
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return null;
+        }
+
+        return _todos.AddCategory(nameBox.Text, getColor!());
+    }
+
     private void AddTodo()
     {
         DateOnly? due = NewDuePicker.Date is { } picked
             ? DateOnly.FromDateTime(picked.Date)
             : null;
+        Guid? categoryId = NewCategoryCombo.SelectedItem is ComboBoxItem { Tag: Guid tag } ? tag : null;
 
-        if (_todos.Add(NewTitleBox.Text, due) is null)
+        if (_todos.Add(NewTitleBox.Text, due, categoryId) is null)
         {
             return; // whitespace-only title — nothing to add
         }
 
         NewTitleBox.Text = string.Empty;
         NewDuePicker.Date = null;
+        NewCategoryCombo.SelectedIndex = 0;
 
         if (_showCompleted)
         {

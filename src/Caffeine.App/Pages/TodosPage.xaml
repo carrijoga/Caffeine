@@ -40,6 +40,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox
                 x:Name="NewTitleBox"
@@ -50,8 +51,14 @@
                 Grid.Column="1"
                 PlaceholderText="Due date"
                 AutomationProperties.Name="Due date" />
-            <Button
+            <ComboBox
+                x:Name="NewCategoryCombo"
                 Grid.Column="2"
+                MinWidth="140"
+                PlaceholderText="Uncategorized"
+                SelectionChanged="NewCategoryCombo_SelectionChanged" />
+            <Button
+                Grid.Column="3"
                 x:Name="AddButton"
                 Content="Add"
                 Style="{StaticResource AccentButtonStyle}"
