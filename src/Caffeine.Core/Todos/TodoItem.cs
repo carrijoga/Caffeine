@@ -14,4 +14,6 @@ public sealed class TodoItem
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? CompletedAt { get; set; }
+
+    public Guid? CategoryId { get; set; }
 }

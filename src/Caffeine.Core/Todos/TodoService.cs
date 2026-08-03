@@ -24,6 +24,9 @@ public sealed class TodoService
     /// <summary>The clock's current local date; due/overdue comparisons use this.</summary>
     public DateOnly Today => DateOnly.FromDateTime(_clock.UtcNow.LocalDateTime);
 
+    /// <summary>Read-only, in creation order.</summary>
+    public IReadOnlyList<TodoCategory> Categories => _list.Categories;
+
     /// <summary>Open items: overdue first, then by due date, then newest first for items with no due date.</summary>
     public IReadOnlyList<TodoItem> Active =>
         _list.Items

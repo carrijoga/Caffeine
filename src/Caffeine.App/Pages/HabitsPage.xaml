@@ -39,6 +39,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox
                 x:Name="NewNameBox"
@@ -51,8 +52,9 @@
                 MaxLength="8"
                 PlaceholderText="&#x2B50;"
                 AutomationProperties.Name="Icon" />
+            <ContentPresenter x:Name="NewIconPickerHost" Grid.Column="2" VerticalAlignment="Center" />
             <Button
-                Grid.Column="2"
+                Grid.Column="3"
                 Content="Add"
                 Style="{StaticResource AccentButtonStyle}"
                 Click="Add_Click" />
