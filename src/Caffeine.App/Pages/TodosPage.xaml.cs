@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.System;
 
@@ -17,6 +18,8 @@ public sealed partial class TodosPage : Page
     private readonly TodoService _todos;
     private readonly DayChangeWatcher _dayChanges;
     private bool _showCompleted;
+    private bool _categoryFilterActive;
+    private Guid? _categoryFilterId;
 
     public TodosPage()
     {
@@ -24,6 +27,7 @@ public sealed partial class TodosPage : Page
         _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
         PopulateCategoryCombo();
+        PopulateCategoryFilterCombo();
 
         // Selecting the tab fires ViewSelector_SelectionChanged → RebuildList.
         ViewSelector.SelectedItem = ActiveTab;
@@ -72,6 +76,45 @@ public sealed partial class TodosPage : Page
         NewCategoryCombo.SelectedIndex = 0;
     }
 
+    private void PopulateCategoryFilterCombo()
+    {
+        CategoryFilterCombo.Items.Clear();
+        CategoryFilterCombo.Items.Add(new ComboBoxItem { Content = "All", Tag = null });
+        CategoryFilterCombo.Items.Add(new ComboBoxItem { Content = "Uncategorized", Tag = Guid.Empty });
+        foreach (TodoCategory category in _todos.Categories)
+        {
+            CategoryFilterCombo.Items.Add(new ComboBoxItem { Content = category.Name, Tag = category.Id });
+        }
+
+        CategoryFilterCombo.SelectedIndex = 0;
+    }
+
+    private void CategoryFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CategoryFilterCombo.SelectedItem is not ComboBoxItem item)
+        {
+            return;
+        }
+
+        switch (item.Tag)
+        {
+            case null:
+                _categoryFilterActive = false;
+                _categoryFilterId = null;
+                break;
+            case Guid g when g == Guid.Empty:
+                _categoryFilterActive = true;
+                _categoryFilterId = null;
+                break;
+            case Guid g:
+                _categoryFilterActive = true;
+                _categoryFilterId = g;
+                break;
+        }
+
+        RebuildList();
+    }
+
     private async void NewCategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (NewCategoryCombo.SelectedItem is not ComboBoxItem { Tag: NewCategorySentinel })
@@ -81,11 +124,39 @@ public sealed partial class TodosPage : Page
 
         TodoCategory? created = await ShowNewCategoryDialogAsync();
         PopulateCategoryCombo();
+        RefreshCategoryFilterCombo();
 
         if (created is not null)
         {
             SelectCategoryInCombo(created.Id);
         }
+    }
+
+    /// <summary>Rebuilds the category filter combo's items (e.g. after a category is added/removed elsewhere), preserving the currently active filter selection.</summary>
+    private void RefreshCategoryFilterCombo()
+    {
+        bool wasActive = _categoryFilterActive;
+        Guid? previousId = _categoryFilterId;
+
+        PopulateCategoryFilterCombo();
+
+        if (!wasActive)
+        {
+            return; // "All" (index 0) is already selected by PopulateCategoryFilterCombo.
+        }
+
+        object? sentinel = previousId is { } id ? id : Guid.Empty;
+        foreach (object obj in CategoryFilterCombo.Items)
+        {
+            if (obj is ComboBoxItem { Tag: Guid tag } item && tag.Equals(sentinel))
+            {
+                CategoryFilterCombo.SelectedItem = item;
+                return;
+            }
+        }
+
+        // The previously selected category no longer exists (shouldn't happen from this call site,
+        // but stay safe) — PopulateCategoryFilterCombo already reset state to "All".
     }
 
     private void SelectCategoryInCombo(Guid categoryId)
@@ -168,6 +239,10 @@ public sealed partial class TodosPage : Page
     private void RebuildList()
     {
         IReadOnlyList<TodoItem> items = _showCompleted ? _todos.Completed : _todos.Active;
+        if (_categoryFilterActive)
+        {
+            items = items.Where(i => i.CategoryId == _categoryFilterId).ToList();
+        }
 
         TodoRows.Children.Clear();
         foreach (TodoItem item in items)
@@ -207,6 +282,11 @@ public sealed partial class TodosPage : Page
             title.Opacity = 0.6;
         }
         text.Children.Add(title);
+
+        if (BuildCategoryBadge(item) is { } badge)
+        {
+            text.Children.Add(badge);
+        }
 
         if (BuildDetail(item) is { } detail)
         {
@@ -284,5 +364,34 @@ public sealed partial class TodosPage : Page
             ? (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"]
             : (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
         return detail;
+    }
+
+    /// <summary>Small colored badge for the item's category; null when uncategorized or the category no longer exists.</summary>
+    private Border? BuildCategoryBadge(TodoItem item)
+    {
+        if (item.CategoryId is not { } categoryId)
+        {
+            return null;
+        }
+
+        TodoCategory? category = _todos.Categories.FirstOrDefault(c => c.Id == categoryId);
+        if (category is null)
+        {
+            return null;
+        }
+
+        return new Border
+        {
+            Background = new SolidColorBrush(HexColor.Parse(category.ColorHex)),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(6, 2, 6, 2),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Child = new TextBlock
+            {
+                Text = category.Name,
+                Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
+                Foreground = new SolidColorBrush(Microsoft.UI.Colors.White),
+            },
+        };
     }
 }
