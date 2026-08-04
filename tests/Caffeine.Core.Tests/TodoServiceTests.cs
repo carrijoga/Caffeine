@@ -294,12 +294,19 @@ public class TodoServiceTests : IDisposable
         var service = CreateService();
         DateOnly today = service.Today;
 
-        TodoItem urgentNotOverdue = service.Add("urgent, on time", today.AddDays(3), TodoPriority.Urgent)!;
+        TodoItem highNotOverdue = service.Add("high, on time", today.AddDays(3), TodoPriority.High)!;
         _clock.Advance(TimeSpan.FromMinutes(1));
         TodoItem lowOverdue = service.Add("low, overdue", today.AddDays(-1), TodoPriority.Low)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        // Undated, so never overdue (IsOverdue requires a non-null DueDate). Under the OLD
+        // ordering (DueDate ?? DateOnly.MaxValue ascending) this item sorts dead last no
+        // matter its priority. Under the NEW ordering it out-ranks highNotOverdue on priority
+        // once both are tied on "not overdue" — which is exactly what should distinguish the
+        // two comparators.
+        TodoItem undatedUrgent = service.Add("urgent, undated", null, TodoPriority.Urgent)!;
 
         Assert.Equal(
-            new[] { lowOverdue.Id, urgentNotOverdue.Id },
+            new[] { lowOverdue.Id, undatedUrgent.Id, highNotOverdue.Id },
             service.Active.Select(i => i.Id).ToArray());
     }
 
