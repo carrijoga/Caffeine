@@ -68,6 +68,36 @@ Note that `Normal = 1` is deliberately *not* the zero value: the default
 comes from the property initializer, not from `default(TodoPriority)`, so
 the enum's numeric order can stay Low→Urgent. A test pins this behavior.
 
+**Corruption behavior — measured, not assumed.** `JsonStore` registers a
+`JsonStringEnumConverter`, so priority persists as a string name
+(`"Priority": "Urgent"`), not a number. Verified empirically against the
+real `JsonStore`:
+
+| `"Priority"` in the file | Result |
+| ------------------------ | ------ |
+| absent | loads as `Normal` (the backward-compat case above) |
+| `"Bogus"` (unknown name) | **throws → whole file renamed to `todos.json.corrupt.bak`, list replaced with an empty document** |
+| `null` | **throws → same whole-file loss** |
+| `99` (out-of-range number) | loads and survives as `99`; sorts above `Urgent` |
+
+This means the unreachable `_ =>` fallback arms in `TodoPriorityInfo` do
+**not** protect against the corruption shape that can actually occur. They
+only cover the numeric case, which this app never writes. The arms are kept
+anyway (harmless, and they do cover a hand-edited number), but the real
+exposure is `JsonStore`'s catch-all `Load()`, which discards the entire
+document on any deserialization failure.
+
+This is a **pre-existing `JsonStore` weakness, not introduced by this
+feature** — `Weekdays` has been persisted in `habits.json` under the same
+converter since before this change. Hardening it (a tolerant converter, or
+a `Load()` that salvages readable items) is tracked as separate work
+because the fix belongs in `JsonStore`, shared by every module.
+
+**Forward compatibility:** an older build reading a newer file ignores the
+unknown `Priority` member without error, but its next save omits the field —
+silently resetting every to-do to `Normal`. Acceptable for a local
+single-user desktop app; worth a release note if a downgrade is ever likely.
+
 ## Service logic (`TodoService`)
 
 The class doc comment currently reads "v1: no priorities, projects, or
