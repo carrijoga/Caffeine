@@ -238,4 +238,37 @@ public class TodoServiceTests : IDisposable
 
         Directory.Delete(dir, recursive: true);
     }
+
+    [Fact]
+    public void Add_HonorsExplicitPriority()
+    {
+        var service = CreateService();
+
+        TodoItem item = service.Add("urgent item", null, TodoPriority.Urgent)!;
+
+        Assert.Equal(TodoPriority.Urgent, item.Priority);
+    }
+
+    [Fact]
+    public void SetPriority_ChangesValue_AndPersists()
+    {
+        var first = CreateService();
+        TodoItem item = first.Add("bump me")!;
+
+        first.SetPriority(item.Id, TodoPriority.High);
+
+        var second = CreateService();
+        Assert.Equal(TodoPriority.High, Assert.Single(second.Active).Priority);
+    }
+
+    [Fact]
+    public void SetPriority_UnknownId_DoesNotThrow()
+    {
+        var service = CreateService();
+        _ = service.Add("untouched")!;
+
+        service.SetPriority(Guid.NewGuid(), TodoPriority.Urgent);
+
+        Assert.Equal(TodoPriority.Normal, Assert.Single(service.Active).Priority);
+    }
 }

@@ -49,7 +49,7 @@ public sealed class TodoService
         !item.IsDone && item.DueDate == Today;
 
     /// <summary>Adds a to-do; whitespace-only titles are ignored. Returns the new item, or null when ignored.</summary>
-    public TodoItem? Add(string title, DateOnly? dueDate = null)
+    public TodoItem? Add(string title, DateOnly? dueDate = null, TodoPriority priority = TodoPriority.Normal)
     {
         string trimmed = title.Trim();
         if (trimmed.Length == 0)
@@ -61,6 +61,7 @@ public sealed class TodoService
         {
             Title = trimmed,
             DueDate = dueDate,
+            Priority = priority,
             CreatedAt = _clock.UtcNow,
         };
         _list.Items.Add(item);
@@ -78,6 +79,19 @@ public sealed class TodoService
 
         item.IsDone = done;
         item.CompletedAt = done ? _clock.UtcNow : null;
+        _store.Save(_list);
+    }
+
+    /// <summary>Changes a to-do's priority. No-ops on unknown id or an unchanged value.</summary>
+    public void SetPriority(Guid id, TodoPriority priority)
+    {
+        TodoItem? item = _list.Items.FirstOrDefault(i => i.Id == id);
+        if (item is null || item.Priority == priority)
+        {
+            return;
+        }
+
+        item.Priority = priority;
         _store.Save(_list);
     }
 
