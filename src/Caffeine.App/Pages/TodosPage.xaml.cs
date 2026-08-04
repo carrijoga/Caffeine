@@ -54,7 +54,7 @@ public sealed partial class TodosPage : Page
         AutomationProperties.SetName(duePicker, "Due date");
 
         var priorityBox = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
-        AutomationProperties.SetName(priorityBox, "Prioridade");
+        AutomationProperties.SetName(priorityBox, "Priority");
         foreach (TodoPriority level in TodoPriorityInfo.DisplayOrder)
         {
             priorityBox.Items.Add(new ComboBoxItem
