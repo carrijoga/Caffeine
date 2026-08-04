@@ -3,9 +3,7 @@ using Caffeine.Core.Todos;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Windows.System;
 
 namespace Caffeine.Pages;
 
@@ -44,30 +42,72 @@ public sealed partial class TodosPage : Page
         RebuildList();
     }
 
-    private void NewTitleBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void Add_Click(object sender, RoutedEventArgs e) => _ = ShowAddDialogAsync();
+
+    /// <summary>Opens the add dialog: title, optional due date, and priority (default Normal).</summary>
+    private async Task ShowAddDialogAsync()
     {
-        if (e.Key == VirtualKey.Enter)
+        var titleBox = new TextBox { PlaceholderText = "Add a to-do…" };
+        AutomationProperties.SetName(titleBox, "To-do title");
+
+        var duePicker = new CalendarDatePicker { PlaceholderText = "Due date" };
+        AutomationProperties.SetName(duePicker, "Due date");
+
+        var priorityBox = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        AutomationProperties.SetName(priorityBox, "Prioridade");
+        foreach (TodoPriority level in TodoPriorityInfo.DisplayOrder)
         {
-            AddTodo();
-            e.Handled = true;
+            priorityBox.Items.Add(new ComboBoxItem
+            {
+                Content = TodoPriorityInfo.Display(level),
+                Tag = level,
+            });
+            if (level == TodoPriority.Normal)
+            {
+                priorityBox.SelectedIndex = priorityBox.Items.Count - 1;
+            }
         }
-    }
 
-    private void Add_Click(object sender, RoutedEventArgs e) => AddTodo();
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Add to-do",
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = false, // empty title — nothing to add yet
+        };
 
-    private void AddTodo()
-    {
-        DateOnly? due = NewDuePicker.Date is { } picked
+        // Gate the primary button so the dialog can't silently discard a blank title.
+        titleBox.TextChanged += (_, _) =>
+            dialog.IsPrimaryButtonEnabled = titleBox.Text.Trim().Length > 0;
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(titleBox);
+        content.Children.Add(duePicker);
+        content.Children.Add(priorityBox);
+        dialog.Content = content;
+
+        // Focus on Opened, not before ShowAsync — the content isn't in the visual tree yet.
+        // This is the one construct here with no precedent elsewhere in the app; if focus
+        // doesn't land in the title box at runtime (Task 7, check 2), try setting
+        // titleBox.Loaded instead.
+        dialog.Opened += (_, _) => titleBox.Focus(FocusState.Programmatic);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        DateOnly? due = duePicker.Date is { } picked
             ? DateOnly.FromDateTime(picked.Date)
             : null;
+        var priority = (TodoPriority)((ComboBoxItem)priorityBox.SelectedItem).Tag;
 
-        if (_todos.Add(NewTitleBox.Text, due) is null)
+        if (_todos.Add(titleBox.Text, due, priority) is null)
         {
             return; // whitespace-only title — nothing to add
         }
-
-        NewTitleBox.Text = string.Empty;
-        NewDuePicker.Date = null;
 
         if (_showCompleted)
         {
@@ -77,8 +117,6 @@ public sealed partial class TodosPage : Page
         {
             RebuildList();
         }
-
-        NewTitleBox.Focus(FocusState.Programmatic);
     }
 
     private void RebuildList()
