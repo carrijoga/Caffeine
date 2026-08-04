@@ -206,4 +206,36 @@ public class TodoServiceTests : IDisposable
 
         Directory.Delete(dir, recursive: true);
     }
+
+    [Fact]
+    public void Add_DefaultsToNormalPriority()
+    {
+        var service = CreateService();
+
+        TodoItem item = service.Add("plain item")!;
+
+        Assert.Equal(TodoPriority.Normal, item.Priority);
+    }
+
+    [Fact]
+    public void Load_LegacyJsonWithoutPriority_DefaultsToNormal()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "caffeine-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        string legacyJson = """
+            {
+              "Items": [
+                { "Id": "22222222-2222-2222-2222-222222222222", "Title": "old item", "DueDate": null, "IsDone": false, "CreatedAt": "2026-01-01T00:00:00+00:00", "CompletedAt": null }
+              ]
+            }
+            """;
+        File.WriteAllText(Path.Combine(dir, "todos.json"), legacyJson);
+
+        var service = new TodoService(_clock, new JsonStore<TodoList>("todos.json", dir));
+
+        TodoItem loaded = Assert.Single(service.Active);
+        Assert.Equal(TodoPriority.Normal, loaded.Priority);
+
+        Directory.Delete(dir, recursive: true);
+    }
 }

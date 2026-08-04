@@ -16,4 +16,7 @@ public sealed class TodoItem
     public DateTimeOffset? CompletedAt { get; set; }
 
     public Guid? CategoryId { get; set; }
+
+    /// <summary>Defaults to Normal, so to-dos saved before this field existed load as Normal.</summary>
+    public TodoPriority Priority { get; set; } = TodoPriority.Normal;
 }
