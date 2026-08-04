@@ -180,13 +180,18 @@ public sealed partial class TodosPage : Page
             RebuildList();
         };
 
+        Button priority = BuildPriorityButton(item);
+
         var grid = new Grid { ColumnSpacing = 12 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        Grid.SetColumn(text, 1);
-        Grid.SetColumn(delete, 2);
+        Grid.SetColumn(priority, 1);
+        Grid.SetColumn(text, 2);
+        Grid.SetColumn(delete, 3);
         grid.Children.Add(check);
+        grid.Children.Add(priority);
         grid.Children.Add(text);
         grid.Children.Add(delete);
 
@@ -195,6 +200,45 @@ public sealed partial class TodosPage : Page
             Style = (Style)Resources["TodoRowStyle"],
             Child = grid,
         };
+    }
+
+    /// <summary>Emoji button opening a flyout of the five priority levels; picking one re-sorts the list.</summary>
+    private Button BuildPriorityButton(TodoItem item)
+    {
+        var button = new Button
+        {
+            Content = new TextBlock { Text = TodoPriorityInfo.Emoji(item.Priority), FontSize = 14 },
+            Padding = new Thickness(8),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        AutomationProperties.SetName(button, $"Priority: {TodoPriorityInfo.Label(item.Priority)}");
+
+        var options = new StackPanel { Spacing = 2 };
+        var flyout = new Flyout { Content = options };
+
+        foreach (TodoPriority level in TodoPriorityInfo.DisplayOrder)
+        {
+            TodoPriority captured = level;
+            var option = new Button
+            {
+                Content = TodoPriorityInfo.Display(captured),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = null,
+                BorderThickness = new Thickness(0),
+            };
+            AutomationProperties.SetName(option, TodoPriorityInfo.Label(captured));
+            option.Click += (_, _) =>
+            {
+                flyout.Hide();
+                _todos.SetPriority(item.Id, captured);
+                RebuildList(); // priority can reorder the list — rebuild, don't just repaint
+            };
+            options.Children.Add(option);
+        }
+
+        button.Flyout = flyout;
+        return button;
     }
 
     /// <summary>Caption under the title: due info (Active) or completion date (Completed); null when there is nothing to say.</summary>
