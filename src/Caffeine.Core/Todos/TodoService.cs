@@ -3,7 +3,7 @@ using Caffeine.Core.Common;
 namespace Caffeine.Core.Todos;
 
 /// <summary>
-/// Single-list to-do store (v1: no priorities, projects, or subtasks).
+/// Single-list to-do store (v1: no projects or subtasks).
 /// Every mutation saves immediately through the JsonStore, matching the
 /// persistence rules of the other modules. "Today" is the clock's local
 /// date, so due/overdue classification flips at local midnight.
@@ -27,11 +27,16 @@ public sealed class TodoService
     /// <summary>Read-only, in creation order.</summary>
     public IReadOnlyList<TodoCategory> Categories => _list.Categories;
 
-    /// <summary>Open items: overdue first, then by due date, then newest first for items with no due date.</summary>
+    /// <summary>
+    /// Open items: overdue first, then most urgent, then by due date, then newest first.
+    /// Overdue outranks priority on purpose — a missed deadline beats a freshly-typed "Urgent".
+    /// </summary>
     public IReadOnlyList<TodoItem> Active =>
         _list.Items
             .Where(i => !i.IsDone)
-            .OrderBy(i => i.DueDate ?? DateOnly.MaxValue)
+            .OrderByDescending(i => IsOverdue(i))
+            .ThenByDescending(i => i.Priority)
+            .ThenBy(i => i.DueDate ?? DateOnly.MaxValue)
             .ThenByDescending(i => i.CreatedAt)
             .ToList();
 

@@ -271,4 +271,71 @@ public class TodoServiceTests : IDisposable
 
         Assert.Equal(TodoPriority.Normal, Assert.Single(service.Active).Priority);
     }
+
+    [Fact]
+    public void Active_OrdersByPriority_AmongUndatedItems()
+    {
+        var service = CreateService();
+
+        TodoItem low = service.Add("low", null, TodoPriority.Low)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem urgent = service.Add("urgent", null, TodoPriority.Urgent)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem normal = service.Add("normal", null, TodoPriority.Normal)!;
+
+        Assert.Equal(
+            new[] { urgent.Id, normal.Id, low.Id },
+            service.Active.Select(i => i.Id).ToArray());
+    }
+
+    [Fact]
+    public void Active_PutsOverdueAboveHigherPriority()
+    {
+        var service = CreateService();
+        DateOnly today = service.Today;
+
+        TodoItem urgentNotOverdue = service.Add("urgent, on time", today.AddDays(3), TodoPriority.Urgent)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem lowOverdue = service.Add("low, overdue", today.AddDays(-1), TodoPriority.Low)!;
+
+        Assert.Equal(
+            new[] { lowOverdue.Id, urgentNotOverdue.Id },
+            service.Active.Select(i => i.Id).ToArray());
+    }
+
+    [Fact]
+    public void Active_EqualPriority_StillOrdersByDueDateThenNewest()
+    {
+        var service = CreateService();
+        DateOnly today = service.Today;
+
+        TodoItem noDueOld = service.Add("no due, old", null, TodoPriority.High)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem dueLater = service.Add("due later", today.AddDays(5), TodoPriority.High)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem dueSooner = service.Add("due sooner", today.AddDays(2), TodoPriority.High)!;
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        TodoItem noDueNew = service.Add("no due, new", null, TodoPriority.High)!;
+
+        Assert.Equal(
+            new[] { dueSooner.Id, dueLater.Id, noDueNew.Id, noDueOld.Id },
+            service.Active.Select(i => i.Id).ToArray());
+    }
+
+    [Fact]
+    public void Completed_OrderingIgnoresPriority()
+    {
+        var service = CreateService();
+        TodoItem lowFirst = service.Add("low", null, TodoPriority.Low)!;
+        TodoItem urgentSecond = service.Add("urgent", null, TodoPriority.Urgent)!;
+
+        service.SetDone(urgentSecond.Id, true);
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        service.SetDone(lowFirst.Id, true);
+
+        // Most recently completed first, regardless of priority.
+        Assert.Equal(
+            new[] { lowFirst.Id, urgentSecond.Id },
+            service.Completed.Select(i => i.Id).ToArray());
+    }
 }
