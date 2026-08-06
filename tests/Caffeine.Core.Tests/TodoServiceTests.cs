@@ -208,141 +208,147 @@ public class TodoServiceTests : IDisposable
     }
 
     [Fact]
-    public void Add_DefaultsToNormalPriority()
+    public void AddCategory_TrimsName_AndStores()
     {
         var service = CreateService();
 
-        TodoItem item = service.Add("plain item")!;
+        TodoCategory? category = service.AddCategory("  Work  ", "#FF0000");
 
-        Assert.Equal(TodoPriority.Normal, item.Priority);
+        Assert.NotNull(category);
+        Assert.Equal("Work", category.Name);
+        Assert.Equal("#FF0000", category.ColorHex);
+        Assert.Contains(category, service.Categories);
     }
 
     [Fact]
-    public void Load_LegacyJsonWithoutPriority_DefaultsToNormal()
-    {
-        string dir = Path.Combine(Path.GetTempPath(), "caffeine-tests-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(dir);
-        string legacyJson = """
-            {
-              "Items": [
-                { "Id": "22222222-2222-2222-2222-222222222222", "Title": "old item", "DueDate": null, "IsDone": false, "CreatedAt": "2026-01-01T00:00:00+00:00", "CompletedAt": null }
-              ]
-            }
-            """;
-        File.WriteAllText(Path.Combine(dir, "todos.json"), legacyJson);
-
-        var service = new TodoService(_clock, new JsonStore<TodoList>("todos.json", dir));
-
-        TodoItem loaded = Assert.Single(service.Active);
-        Assert.Equal(TodoPriority.Normal, loaded.Priority);
-
-        Directory.Delete(dir, recursive: true);
-    }
-
-    [Fact]
-    public void Add_HonorsExplicitPriority()
+    public void AddCategory_WhitespaceName_IsIgnored()
     {
         var service = CreateService();
 
-        TodoItem item = service.Add("urgent item", null, TodoPriority.Urgent)!;
-
-        Assert.Equal(TodoPriority.Urgent, item.Priority);
+        Assert.Null(service.AddCategory("   ", "#FF0000"));
+        Assert.Empty(service.Categories);
     }
 
     [Fact]
-    public void SetPriority_ChangesValue_AndPersists()
+    public void RenameCategory_UpdatesNameAndColor()
+    {
+        var service = CreateService();
+        TodoCategory category = service.AddCategory("Work", "#FF0000")!;
+
+        service.RenameCategory(category.Id, "Personal", "#00FF00");
+
+        TodoCategory updated = Assert.Single(service.Categories);
+        Assert.Equal("Personal", updated.Name);
+        Assert.Equal("#00FF00", updated.ColorHex);
+    }
+
+    [Fact]
+    public void RenameCategory_UnknownId_NoOps()
+    {
+        var service = CreateService();
+        service.AddCategory("Work", "#FF0000");
+
+        service.RenameCategory(Guid.NewGuid(), "Nope", "#000000");
+
+        TodoCategory unchanged = Assert.Single(service.Categories);
+        Assert.Equal("Work", unchanged.Name);
+    }
+
+    [Fact]
+    public void CountByCategory_CountsAssignedTodos()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoItem a = service.Add("task a")!;
+        TodoItem b = service.Add("task b")!;
+        service.SetCategory(a.Id, work.Id);
+        service.SetCategory(b.Id, work.Id);
+
+        Assert.Equal(2, service.CountByCategory(work.Id));
+        Assert.Equal(0, service.CountByCategory(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void DeleteCategory_RemovesCategory_AndCascadesToAssignedTodos()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoCategory personal = service.AddCategory("Personal", "#00FF00")!;
+        TodoItem workItem = service.Add("work task")!;
+        TodoItem personalItem = service.Add("personal task")!;
+        TodoItem unassigned = service.Add("no category")!;
+        service.SetCategory(workItem.Id, work.Id);
+        service.SetCategory(personalItem.Id, personal.Id);
+
+        service.DeleteCategory(work.Id);
+
+        Assert.DoesNotContain(service.Categories, c => c.Id == work.Id);
+        Assert.Contains(service.Categories, c => c.Id == personal.Id);
+        Assert.DoesNotContain(service.Active, i => i.Id == workItem.Id);
+        Assert.Contains(service.Active, i => i.Id == personalItem.Id);
+        Assert.Contains(service.Active, i => i.Id == unassigned.Id);
+    }
+
+    [Fact]
+    public void DeleteCategory_UnknownId_NoOps()
+    {
+        var service = CreateService();
+        service.AddCategory("Work", "#FF0000");
+
+        service.DeleteCategory(Guid.NewGuid());
+
+        Assert.Single(service.Categories);
+    }
+
+    [Fact]
+    public void SetCategory_AssignsAndClears()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+        TodoItem item = service.Add("task")!;
+
+        service.SetCategory(item.Id, work.Id);
+        Assert.Equal(work.Id, service.Active.Single().CategoryId);
+
+        service.SetCategory(item.Id, null);
+        Assert.Null(service.Active.Single().CategoryId);
+    }
+
+    [Fact]
+    public void SetCategory_UnknownTodoId_NoOps()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+
+        service.SetCategory(Guid.NewGuid(), work.Id);
+
+        Assert.Empty(service.Active);
+    }
+
+    [Fact]
+    public void Add_WithCategoryId_AssignsCategory()
+    {
+        var service = CreateService();
+        TodoCategory work = service.AddCategory("Work", "#FF0000")!;
+
+        TodoItem item = service.Add("task", categoryId: work.Id)!;
+
+        Assert.Equal(work.Id, item.CategoryId);
+    }
+
+    [Fact]
+    public void CategoryAndCategoryAssignment_PersistAcrossReload()
     {
         var first = CreateService();
-        TodoItem item = first.Add("bump me")!;
-
-        first.SetPriority(item.Id, TodoPriority.High);
+        TodoCategory work = first.AddCategory("Work", "#FF0000")!;
+        TodoItem item = first.Add("task", categoryId: work.Id)!;
 
         var second = CreateService();
-        Assert.Equal(TodoPriority.High, Assert.Single(second.Active).Priority);
-    }
 
-    [Fact]
-    public void SetPriority_UnknownId_DoesNotThrow()
-    {
-        var service = CreateService();
-        _ = service.Add("untouched")!;
-
-        service.SetPriority(Guid.NewGuid(), TodoPriority.Urgent);
-
-        Assert.Equal(TodoPriority.Normal, Assert.Single(service.Active).Priority);
-    }
-
-    [Fact]
-    public void Active_OrdersByPriority_AmongUndatedItems()
-    {
-        var service = CreateService();
-
-        TodoItem low = service.Add("low", null, TodoPriority.Low)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem urgent = service.Add("urgent", null, TodoPriority.Urgent)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem normal = service.Add("normal", null, TodoPriority.Normal)!;
-
-        Assert.Equal(
-            new[] { urgent.Id, normal.Id, low.Id },
-            service.Active.Select(i => i.Id).ToArray());
-    }
-
-    [Fact]
-    public void Active_PutsOverdueAboveHigherPriority()
-    {
-        var service = CreateService();
-        DateOnly today = service.Today;
-
-        TodoItem highNotOverdue = service.Add("high, on time", today.AddDays(3), TodoPriority.High)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem lowOverdue = service.Add("low, overdue", today.AddDays(-1), TodoPriority.Low)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        // Undated, so never overdue (IsOverdue requires a non-null DueDate). Under the OLD
-        // ordering (DueDate ?? DateOnly.MaxValue ascending) this item sorts dead last no
-        // matter its priority. Under the NEW ordering it out-ranks highNotOverdue on priority
-        // once both are tied on "not overdue" — which is exactly what should distinguish the
-        // two comparators.
-        TodoItem undatedUrgent = service.Add("urgent, undated", null, TodoPriority.Urgent)!;
-
-        Assert.Equal(
-            new[] { lowOverdue.Id, undatedUrgent.Id, highNotOverdue.Id },
-            service.Active.Select(i => i.Id).ToArray());
-    }
-
-    [Fact]
-    public void Active_EqualPriority_StillOrdersByDueDateThenNewest()
-    {
-        var service = CreateService();
-        DateOnly today = service.Today;
-
-        TodoItem noDueOld = service.Add("no due, old", null, TodoPriority.High)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem dueLater = service.Add("due later", today.AddDays(5), TodoPriority.High)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem dueSooner = service.Add("due sooner", today.AddDays(2), TodoPriority.High)!;
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        TodoItem noDueNew = service.Add("no due, new", null, TodoPriority.High)!;
-
-        Assert.Equal(
-            new[] { dueSooner.Id, dueLater.Id, noDueNew.Id, noDueOld.Id },
-            service.Active.Select(i => i.Id).ToArray());
-    }
-
-    [Fact]
-    public void Completed_OrderingIgnoresPriority()
-    {
-        var service = CreateService();
-        TodoItem lowFirst = service.Add("low", null, TodoPriority.Low)!;
-        TodoItem urgentSecond = service.Add("urgent", null, TodoPriority.Urgent)!;
-
-        service.SetDone(urgentSecond.Id, true);
-        _clock.Advance(TimeSpan.FromMinutes(1));
-        service.SetDone(lowFirst.Id, true);
-
-        // Most recently completed first, regardless of priority.
-        Assert.Equal(
-            new[] { lowFirst.Id, urgentSecond.Id },
-            service.Completed.Select(i => i.Id).ToArray());
+        TodoCategory reloadedCategory = Assert.Single(second.Categories);
+        Assert.Equal("Work", reloadedCategory.Name);
+        Assert.Equal("#FF0000", reloadedCategory.ColorHex);
+        TodoItem reloadedItem = Assert.Single(second.Active);
+        Assert.Equal(work.Id, reloadedItem.CategoryId);
     }
 }
