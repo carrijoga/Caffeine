@@ -12,8 +12,6 @@ namespace Caffeine.Pages;
 
 public sealed partial class TodosPage : Page
 {
-    private const string NewCategorySentinel = "__new_category__";
-
     private readonly TodoService _todos;
     private readonly DayChangeWatcher _dayChanges;
     private bool _showCompleted;
@@ -25,7 +23,6 @@ public sealed partial class TodosPage : Page
         _todos = ((App)Application.Current).Todos;
         _dayChanges = ((App)Application.Current).DayChanges;
         InitializeComponent();
-        PopulateCategoryCombo();
         PopulateCategoryFilterCombo();
 
         // Selecting the tab fires ViewSelector_SelectionChanged → RebuildList.
@@ -53,7 +50,7 @@ public sealed partial class TodosPage : Page
 
     private void Add_Click(object sender, RoutedEventArgs e) => _ = ShowAddDialogAsync();
 
-    /// <summary>Opens the add dialog: title, optional due date, and priority (default Normal).</summary>
+    /// <summary>Opens the add dialog: title, optional due date, category, and priority (default Normal).</summary>
     private async Task ShowAddDialogAsync()
     {
         var titleBox = new TextBox { PlaceholderText = "Add a to-do…" };
@@ -61,6 +58,16 @@ public sealed partial class TodosPage : Page
 
         var duePicker = new CalendarDatePicker { PlaceholderText = "Due date" };
         AutomationProperties.SetName(duePicker, "Due date");
+
+        var categoryBox = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        AutomationProperties.SetName(categoryBox, "Category");
+        categoryBox.Items.Add(new ComboBoxItem { Content = "Uncategorized", Tag = null });
+        foreach (TodoCategory category in _todos.Categories)
+        {
+            categoryBox.Items.Add(new ComboBoxItem { Content = category.Name, Tag = category.Id });
+        }
+
+        categoryBox.SelectedIndex = 0;
 
         var priorityBox = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
         AutomationProperties.SetName(priorityBox, "Priority");
@@ -86,6 +93,46 @@ public sealed partial class TodosPage : Page
             DefaultButton = ContentDialogButton.Primary,
             IsPrimaryButtonEnabled = false, // empty title — nothing to add yet
         };
+
+        // Gate the primary button so the dialog can't silently discard a blank title.
+        titleBox.TextChanged += (_, _) =>
+            dialog.IsPrimaryButtonEnabled = titleBox.Text.Trim().Length > 0;
+
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(titleBox);
+        content.Children.Add(duePicker);
+        content.Children.Add(categoryBox);
+        content.Children.Add(priorityBox);
+        dialog.Content = content;
+
+        // Focus on Opened, not before ShowAsync — the content isn't in the visual tree yet.
+        dialog.Opened += (_, _) => titleBox.Focus(FocusState.Programmatic);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        DateOnly? due = duePicker.Date is { } picked
+            ? DateOnly.FromDateTime(picked.Date)
+            : null;
+        Guid? categoryId = categoryBox.SelectedItem is ComboBoxItem { Tag: Guid tag } ? tag : null;
+        var priority = (TodoPriority)((ComboBoxItem)priorityBox.SelectedItem).Tag;
+
+        if (_todos.Add(titleBox.Text, due, categoryId, priority) is null)
+        {
+            return; // whitespace-only title — nothing to add
+        }
+
+        if (_showCompleted)
+        {
+            ViewSelector.SelectedItem = ActiveTab; // rebuilds via SelectionChanged
+        }
+        else
+        {
+            RebuildList();
+        }
+    }
 
     private void ManageCategoriesButton_Click(object sender, RoutedEventArgs e) =>
         _ = ShowManageCategoriesDialogAsync();
@@ -125,7 +172,6 @@ public sealed partial class TodosPage : Page
 
             // Combos may be stale if edits/deletes happened without a full-dialog reopen path;
             // refresh once more after the dialog closes and rebuild the visible list.
-            PopulateCategoryCombo();
             RefreshCategoryFilterCombo();
             RebuildList();
         }
@@ -166,7 +212,6 @@ public sealed partial class TodosPage : Page
             {
                 await ShowNewCategoryDialogAsync();
                 RebuildCategoryList();
-                PopulateCategoryCombo();
                 RefreshCategoryFilterCombo();
             });
         };
@@ -303,19 +348,6 @@ public sealed partial class TodosPage : Page
         }
     }
 
-    private void PopulateCategoryCombo()
-    {
-        NewCategoryCombo.Items.Clear();
-        NewCategoryCombo.Items.Add(new ComboBoxItem { Content = "Uncategorized", Tag = null });
-        foreach (TodoCategory category in _todos.Categories)
-        {
-            NewCategoryCombo.Items.Add(new ComboBoxItem { Content = category.Name, Tag = category.Id });
-        }
-
-        NewCategoryCombo.Items.Add(new ComboBoxItem { Content = "+ New category…", Tag = NewCategorySentinel });
-        NewCategoryCombo.SelectedIndex = 0;
-    }
-
     private void PopulateCategoryFilterCombo()
     {
         CategoryFilterCombo.Items.Clear();
@@ -355,23 +387,6 @@ public sealed partial class TodosPage : Page
         RebuildList();
     }
 
-    private async void NewCategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (NewCategoryCombo.SelectedItem is not ComboBoxItem { Tag: NewCategorySentinel })
-        {
-            return;
-        }
-
-        TodoCategory? created = await ShowNewCategoryDialogAsync();
-        PopulateCategoryCombo();
-        RefreshCategoryFilterCombo();
-
-        if (created is not null)
-        {
-            SelectCategoryInCombo(created.Id);
-        }
-    }
-
     /// <summary>Rebuilds the category filter combo's items (e.g. after a category is added/removed elsewhere), preserving the currently active filter selection.</summary>
     private void RefreshCategoryFilterCombo()
     {
@@ -397,18 +412,6 @@ public sealed partial class TodosPage : Page
 
         // The previously selected category no longer exists (shouldn't happen from this call site,
         // but stay safe) — PopulateCategoryFilterCombo already reset state to "All".
-    }
-
-    private void SelectCategoryInCombo(Guid categoryId)
-    {
-        foreach (object obj in NewCategoryCombo.Items)
-        {
-            if (obj is ComboBoxItem { Tag: Guid tag } item && tag == categoryId)
-            {
-                NewCategoryCombo.SelectedItem = item;
-                return;
-            }
-        }
     }
 
     /// <summary>Shows the add-category dialog. Returns the created category, or null if cancelled/ignored.</summary>
@@ -446,32 +449,6 @@ public sealed partial class TodosPage : Page
         }
 
         return _todos.AddCategory(nameBox.Text, getColor!());
-    }
-
-    private void AddTodo()
-    {
-        DateOnly? due = NewDuePicker.Date is { } picked
-            ? DateOnly.FromDateTime(picked.Date)
-            : null;
-        Guid? categoryId = NewCategoryCombo.SelectedItem is ComboBoxItem { Tag: Guid tag } ? tag : null;
-
-        if (_todos.Add(NewTitleBox.Text, due, categoryId) is null)
-        {
-            return; // whitespace-only title — nothing to add
-        }
-
-        NewTitleBox.Text = string.Empty;
-        NewDuePicker.Date = null;
-        NewCategoryCombo.SelectedIndex = 0;
-
-        if (_showCompleted)
-        {
-            ViewSelector.SelectedItem = ActiveTab; // rebuilds via SelectionChanged
-        }
-        else
-        {
-            RebuildList();
-        }
     }
 
     private void RebuildList()

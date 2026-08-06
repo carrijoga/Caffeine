@@ -46,35 +46,14 @@
             TextWrapping="Wrap"
             Margin="0,0,0,20" />
 
-        <Grid Grid.Row="2" ColumnSpacing="8" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox
-                x:Name="NewTitleBox"
-                PlaceholderText="Add a to-do…"
-                KeyDown="NewTitleBox_KeyDown" />
-            <CalendarDatePicker
-                x:Name="NewDuePicker"
-                Grid.Column="1"
-                PlaceholderText="Due date"
-                AutomationProperties.Name="Due date" />
-            <ComboBox
-                x:Name="NewCategoryCombo"
-                Grid.Column="2"
-                MinWidth="140"
-                PlaceholderText="Uncategorized"
-                SelectionChanged="NewCategoryCombo_SelectionChanged" />
-            <Button
-                Grid.Column="3"
-                x:Name="AddButton"
-                Content="Add"
-                Style="{StaticResource AccentButtonStyle}"
-                Click="Add_Click" />
-        </Grid>
+        <Button
+            Grid.Row="2"
+            x:Name="AddButton"
+            Content="Add to-do"
+            Style="{StaticResource AccentButtonStyle}"
+            HorizontalAlignment="Left"
+            Margin="0,0,0,16"
+            Click="Add_Click" />
 
         <Grid Grid.Row="3" ColumnSpacing="8" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
